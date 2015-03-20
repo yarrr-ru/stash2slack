@@ -59,6 +59,11 @@ public class PullRequestActivityListener {
             String userName = event.getUser() != null ? event.getUser().getDisplayName() : "unknown user";
             String activity = event.getActivity().getAction().name();
 
+            // Ignore RESCOPED PR events
+            if (activity.equalsIgnoreCase("RESCOPED")) {
+                return;
+            }
+
             String url = navBuilder
                     .project(projectName)
                     .repo(repoName)
