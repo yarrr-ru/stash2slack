@@ -7,10 +7,12 @@ import com.atlassian.stash.content.ChangesetsBetweenRequest;
 import com.atlassian.stash.event.RepositoryPushEvent;
 import com.atlassian.stash.nav.NavBuilder;
 import com.atlassian.stash.repository.RefChange;
+import com.atlassian.stash.repository.RefChangeType;
 import com.atlassian.stash.repository.Repository;
 import com.atlassian.stash.util.Page;
 import com.atlassian.stash.util.PageRequest;
 import com.atlassian.stash.util.PageUtils;
+import com.google.common.collect.Lists;
 import com.google.gson.Gson;
 import com.pragbits.stash.SlackGlobalSettingsService;
 import com.pragbits.stash.SlackSettings;
@@ -18,6 +20,9 @@ import com.pragbits.stash.SlackSettingsService;
 import com.pragbits.stash.tools.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.LinkedList;
+import java.util.List;
 
 public class RepositoryPushActivityListener {
     static final String KEY_GLOBAL_SETTING_HOOK_URL = "stash2slack.globalsettings.hookurl";
@@ -79,18 +84,37 @@ public class RepositoryPushActivityListener {
                         event.getUser() != null ? event.getUser().getDisplayName() : "unknown user",
                         event.getUser() != null ? event.getUser().getEmailAddress() : "unknown email",
                         url);
+
+                if (refChange.getToHash().equalsIgnoreCase("0000000000000000000000000000000000000000") && refChange.getType() == RefChangeType.DELETE) {
+                    // issue#4: if type is "DELETE" and toHash is all zero then this is a branch delete
+                    text = String.format("`%s` deleted by `%s <%s>`.",
+                            refChange.getRefId(),
+                            event.getUser() != null ? event.getUser().getDisplayName() : "unknown user",
+                            event.getUser() != null ? event.getUser().getEmailAddress() : "unknown email");
+                }
+
                 payload.setText(text);
                 payload.setMrkdwn(true);
 
-                ChangesetsBetweenRequest request = new ChangesetsBetweenRequest.Builder(repository)
-                        .exclude(refChange.getFromHash())
-                        .include(refChange.getToHash())
-                        .build();
+                List<Changeset> myChanges = new LinkedList<Changeset>();
+                if (refChange.getFromHash().equalsIgnoreCase("0000000000000000000000000000000000000000")) {
+                    // issue#3 if fromHash is all zero (meaning the beginning of everything, probably), then this push is probably
+                    // a new branch, and we want only to display the latest commit, not the entire history
+                    Changeset latestChangeSet = commitService.getChangeset(repository, refChange.getToHash());
+                    myChanges.add(latestChangeSet);
+                } else {
+                    ChangesetsBetweenRequest request = new ChangesetsBetweenRequest.Builder(repository)
+                            .exclude(refChange.getFromHash())
+                            .include(refChange.getToHash())
+                            .build();
 
-                Page<Changeset> changeSets = commitService.getChangesetsBetween(
-                        request, PageUtils.newRequest(0, PageRequest.MAX_PAGE_LIMIT));
+                    Page<Changeset> changeSets = commitService.getChangesetsBetween(
+                            request, PageUtils.newRequest(0, PageRequest.MAX_PAGE_LIMIT));
 
-                for (Changeset ch : changeSets.getValues()) {
+                    myChanges.addAll(Lists.newArrayList(changeSets.getValues()));
+                }
+
+                for (Changeset ch : myChanges) {
                     SlackAttachment attachment = new SlackAttachment();
                     attachment.setFallback(text);
                     attachment.setColor("#aabbcc");
