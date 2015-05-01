@@ -87,7 +87,8 @@ public class RepositoryPushActivityListener {
 
                 if (refChange.getToHash().equalsIgnoreCase("0000000000000000000000000000000000000000") && refChange.getType() == RefChangeType.DELETE) {
                     // issue#4: if type is "DELETE" and toHash is all zero then this is a branch delete
-                    text = String.format("`%s` deleted by `%s <%s>`.",
+                    text = String.format("`%s` branch `%s` deleted by `%s <%s>`.",
+                            event.getRepository().getName,
                             refChange.getRefId(),
                             event.getUser() != null ? event.getUser().getDisplayName() : "unknown user",
                             event.getUser() != null ? event.getUser().getEmailAddress() : "unknown email");
