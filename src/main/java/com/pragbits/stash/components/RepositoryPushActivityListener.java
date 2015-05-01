@@ -14,6 +14,7 @@ import com.atlassian.stash.util.PageRequest;
 import com.atlassian.stash.util.PageUtils;
 import com.google.common.collect.Lists;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.pragbits.stash.SlackGlobalSettingsService;
 import com.pragbits.stash.SlackSettings;
 import com.pragbits.stash.SlackSettingsService;
@@ -21,6 +22,7 @@ import com.pragbits.stash.tools.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -87,9 +89,9 @@ public class RepositoryPushActivityListener {
 
                 if (refChange.getToHash().equalsIgnoreCase("0000000000000000000000000000000000000000") && refChange.getType() == RefChangeType.DELETE) {
                     // issue#4: if type is "DELETE" and toHash is all zero then this is a branch delete
-                    text = String.format("`%s` branch `%s` deleted by `%s <%s>`.",
-                            event.getRepository().getName,
+                    text = String.format("Branch `%s` deleted from repository `%s` by `%s <%s>`.",
                             refChange.getRefId(),
+                            event.getRepository().getName(),
                             event.getUser() != null ? event.getUser().getDisplayName() : "unknown user",
                             event.getUser() != null ? event.getUser().getEmailAddress() : "unknown email");
                 }
@@ -124,11 +126,13 @@ public class RepositoryPushActivityListener {
                     attachment.setTitle(String.format("[%s:%s] - %s", event.getRepository().getName(), refChange.getRefId(), ch.getId()));
                     attachment.setTitle_link(url.concat(String.format("/%s", ch.getId())));
 
-                    field.setTitle(String.format("comment: %s", ch.getMessage()));
+                    field.setTitle("comment");
+                    field.setValue(ch.getMessage());
                     field.setShort(false);
                     attachment.addField(field);
                     payload.addAttachment(attachment);
                 }
+
 
                 slackNotifier.SendSlackNotification(hookSelector.getSelectedHook(), gson.toJson(payload));
             }

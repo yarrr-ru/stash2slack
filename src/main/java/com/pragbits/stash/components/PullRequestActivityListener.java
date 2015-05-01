@@ -6,6 +6,7 @@ import com.atlassian.stash.event.pull.PullRequestCommentActivityEvent;
 import com.atlassian.stash.nav.NavBuilder;
 import com.atlassian.stash.repository.Repository;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.pragbits.stash.SlackGlobalSettingsService;
 import com.pragbits.stash.SlackSettings;
 import com.pragbits.stash.SlackSettingsService;
@@ -24,7 +25,6 @@ public class PullRequestActivityListener {
     private final NavBuilder navBuilder;
     private final SlackNotifier slackNotifier;
     private final Gson gson = new Gson();
-
 
     public PullRequestActivityListener(SlackGlobalSettingsService slackGlobalSettingsService,
                                              SlackSettingsService slackSettingsService,
