@@ -51,7 +51,7 @@ public class SlackSettingsServlet extends HttpServlet {
         throws ServletException, IOException {
 
         try {
-            validationService.validateForGlobal(Permission.SYS_ADMIN);
+            validationService.validateForRepository(this.repository, Permission.REPO_ADMIN);
         } catch (AuthorisationException e) {
             // Skip form processing
             doGet(req, res);

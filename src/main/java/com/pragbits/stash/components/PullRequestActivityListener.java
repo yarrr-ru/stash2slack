@@ -3,7 +3,11 @@ package com.pragbits.stash.components;
 import com.atlassian.event.api.EventListener;
 import com.atlassian.stash.event.pull.PullRequestActivityEvent;
 import com.atlassian.stash.event.pull.PullRequestCommentActivityEvent;
+import com.atlassian.stash.event.pull.PullRequestRescopeActivityEvent;
 import com.atlassian.stash.nav.NavBuilder;
+import com.atlassian.stash.pull.PullRequestActivity;
+import com.atlassian.stash.pull.PullRequestRescopeActivity;
+import com.atlassian.stash.pull.PullRequestState;
 import com.atlassian.stash.repository.Repository;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -60,7 +64,7 @@ public class PullRequestActivityListener {
             String activity = event.getActivity().getAction().name();
 
             // Ignore RESCOPED PR events
-            if (activity.equalsIgnoreCase("RESCOPED")) {
+            if (activity.equalsIgnoreCase("RESCOPED") && event instanceof PullRequestRescopeActivityEvent) {
                 return;
             }
 
