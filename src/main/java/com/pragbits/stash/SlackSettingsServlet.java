@@ -3,10 +3,6 @@ package com.pragbits.stash;
 import com.atlassian.soy.renderer.SoyException;
 import com.atlassian.soy.renderer.SoyTemplateRenderer;
 import com.atlassian.stash.exception.AuthorisationException;
-import com.atlassian.stash.nav.NavBuilder;
-import com.pragbits.stash.SlackSettings;
-import com.pragbits.stash.SlackSettingsService;
-import com.pragbits.stash.PluginMetadata;
 import com.atlassian.stash.repository.Repository;
 import com.atlassian.stash.repository.RepositoryService;
 import com.atlassian.stash.user.Permission;
@@ -108,6 +104,11 @@ public class SlackSettingsServlet extends HttpServlet {
             enabledPush = true;
         }
 
+        PushNotificationLevel pushNotificationLevel = PushNotificationLevel.VERBOSE;
+        if (null != req.getParameter("slackPushNotificationLevel")) {
+            pushNotificationLevel = PushNotificationLevel.valueOf(req.getParameter("slackPushNotificationLevel"));
+        }
+
         String channel = req.getParameter("slackChannelName");
         String webHookUrl = req.getParameter("slackWebHookUrl");
         slackSettingsService.setSlackSettings(
@@ -123,6 +124,7 @@ public class SlackSettingsServlet extends HttpServlet {
                         mergedEnabled,
                         commentedEnabled,
                         enabledPush,
+                        pushNotificationLevel,
                         channel,
                         webHookUrl));
 

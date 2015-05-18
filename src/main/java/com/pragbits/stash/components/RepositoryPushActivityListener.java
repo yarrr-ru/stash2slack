@@ -14,7 +14,6 @@ import com.atlassian.stash.util.PageRequest;
 import com.atlassian.stash.util.PageUtils;
 import com.google.common.collect.Lists;
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.pragbits.stash.SlackGlobalSettingsService;
 import com.pragbits.stash.SlackSettings;
 import com.pragbits.stash.SlackSettingsService;
@@ -22,7 +21,6 @@ import com.pragbits.stash.tools.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
@@ -114,20 +112,16 @@ public class RepositoryPushActivityListener {
                     myChanges.addAll(Lists.newArrayList(changeSets.getValues()));
                 }
 
-                for (Changeset ch : myChanges) {
-                    SlackAttachment attachment = new SlackAttachment();
-                    attachment.setFallback(text);
-                    attachment.setColor("#aabbcc");
-                    SlackAttachmentField field = new SlackAttachmentField();
-
-                    attachment.setTitle(String.format("[%s:%s] - %s", event.getRepository().getName(), refChange.getRefId(), ch.getId()));
-                    attachment.setTitle_link(url.concat(String.format("/%s", ch.getId())));
-
-                    field.setTitle("comment");
-                    field.setValue(ch.getMessage());
-                    field.setShort(false);
-                    attachment.addField(field);
-                    payload.addAttachment(attachment);
+                switch (slackSettings.getPushNotificationLevel()) {
+                    case COMPACT:
+                        compactCommitLog(event, refChange, payload, url, myChanges);
+                        break;
+                    case VERBOSE:
+                        verboseCommitLog(event, refChange, payload, url, text, myChanges);
+                        break;
+                    case MINIMAL:
+                    default:
+                        break;
                 }
 
                 // slackSettings.getSlackChannelName might be:
@@ -145,8 +139,47 @@ public class RepositoryPushActivityListener {
                     }
                 }
             }
-
         }
-
     }
+
+    private void compactCommitLog(RepositoryPushEvent event, RefChange refChange, SlackPayload payload, String url, List<Changeset> myChanges) {
+        SlackAttachment commits = new SlackAttachment();
+        commits.setColor("#aabbcc");
+        commits.setTitle(String.format("[%s:%s]", event.getRepository().getName(), refChange.getRefId()));
+        StringBuilder attachmentFallback = new StringBuilder();
+        for (Changeset ch : myChanges) {
+            String commitUrl = url.concat(String.format("/%s", ch.getId()));
+            String firstCommitMessageLine = ch.getMessage().split("\n")[0];
+
+            SlackAttachmentField commit = new SlackAttachmentField();
+            commit.setValue(String.format("<%s|%s>: %s - %s",
+                    commitUrl, ch.getDisplayId(), firstCommitMessageLine, ch.getAuthor().getName()));
+            commit.setShort(false);
+
+            commits.addField(commit);
+            attachmentFallback.append(String.format("%s: %s\n", ch.getDisplayId(), firstCommitMessageLine));
+        }
+        commits.setFallback(attachmentFallback.toString());
+
+        payload.addAttachment(commits);
+    }
+
+    private void verboseCommitLog(RepositoryPushEvent event, RefChange refChange, SlackPayload payload, String url, String text, List<Changeset> myChanges) {
+        for (Changeset ch : myChanges) {
+            SlackAttachment attachment = new SlackAttachment();
+            attachment.setFallback(text);
+            attachment.setColor("#aabbcc");
+            SlackAttachmentField field = new SlackAttachmentField();
+
+            attachment.setTitle(String.format("[%s:%s] - %s", event.getRepository().getName(), refChange.getRefId(), ch.getId()));
+            attachment.setTitle_link(url.concat(String.format("/%s", ch.getId())));
+
+            field.setTitle("comment");
+            field.setValue(ch.getMessage());
+            field.setShort(false);
+            attachment.addField(field);
+            payload.addAttachment(attachment);
+        }
+    }
+
 }

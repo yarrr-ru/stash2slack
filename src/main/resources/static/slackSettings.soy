@@ -90,6 +90,16 @@
                     {param checked: $slackSettings.slackNotificationsEnabledForPush /}
                     {param description: stash_i18n('stash.web.slack.settings.slack.push.enabled.description', 'If enabled, users will receive slack notifications about push activities') /}
                 {/call}
+                {call aui.form.selectField}
+                    {param id: 'slackPushNotificationLevel' /}
+                    {param labelContent: stash_i18n('stash.web.slack.settings.push.notification.level.label', 'Notification level') /}
+                    {param value: $slackSettings.pushNotificationLevel /}
+                    {param options: [
+                        [ 'text': 'Minimal', 'value': 'MINIMAL' ],
+                        [ 'text': 'Compact', 'value': 'COMPACT' ],
+                        [ 'text': 'Verbose', 'value': 'VERBOSE' ]
+                    ] /}
+                {/call}
 
                 <h4>Channel and hook overrides</h4>
                 {call widget.aui.form.text}
