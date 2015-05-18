@@ -14,6 +14,7 @@ import com.atlassian.stash.util.PageRequest;
 import com.atlassian.stash.util.PageUtils;
 import com.google.common.collect.Lists;
 import com.google.gson.Gson;
+import com.pragbits.stash.ColorCode;
 import com.pragbits.stash.SlackGlobalSettingsService;
 import com.pragbits.stash.SlackSettings;
 import com.pragbits.stash.SlackSettingsService;
@@ -144,7 +145,7 @@ public class RepositoryPushActivityListener {
 
     private void compactCommitLog(RepositoryPushEvent event, RefChange refChange, SlackPayload payload, String url, List<Changeset> myChanges) {
         SlackAttachment commits = new SlackAttachment();
-        commits.setColor("#aabbcc");
+        commits.setColor(ColorCode.GRAY.getCode());
         commits.setTitle(String.format("[%s:%s]", event.getRepository().getName(), refChange.getRefId()));
         StringBuilder attachmentFallback = new StringBuilder();
         for (Changeset ch : myChanges) {
@@ -168,7 +169,7 @@ public class RepositoryPushActivityListener {
         for (Changeset ch : myChanges) {
             SlackAttachment attachment = new SlackAttachment();
             attachment.setFallback(text);
-            attachment.setColor("#aabbcc");
+            attachment.setColor(ColorCode.GRAY.getCode());
             SlackAttachmentField field = new SlackAttachmentField();
 
             attachment.setTitle(String.format("[%s:%s] - %s", event.getRepository().getName(), refChange.getRefId(), ch.getId()));
