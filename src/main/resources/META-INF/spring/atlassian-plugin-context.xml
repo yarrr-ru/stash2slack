@@ -24,8 +24,9 @@
         <constructor-arg index="1" ref="slackSettingsService" />
         <constructor-arg index="2" ref="navBuilder" />
         <constructor-arg index="3" ref="slackNotifier" />
+        <constructor-arg index="4" ref="avatarService" />
     </bean>
-    
+
     <bean id="repositoryPushActivityListener"
           class="com.pragbits.stash.components.RepositoryPushActivityListener">
         <constructor-arg index="0" ref="slackGlobalSettingsService" />
@@ -36,4 +37,3 @@
     </bean>
 
 </beans>
-

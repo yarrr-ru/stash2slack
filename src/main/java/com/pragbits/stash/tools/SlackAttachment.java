@@ -32,6 +32,30 @@ public class SlackAttachment {
         return color;
     }
 
+    public String getText() {
+        return text;
+    }
+
+    public void setText(String text) {
+        this.text = text;
+    }
+
+    public String getAuthorName() {
+        return author_name;
+    }
+
+    public void setAuthorName(String author_name) {
+        this.author_name = author_name;
+    }
+
+    public String getAuthorIcon() {
+        return author_icon;
+    }
+
+    public void setAuthorIcon(String author_icon) {
+        this.author_icon = author_icon;
+    }
+
     public void setColor(String color) {
         this.color = color;
     }
@@ -68,4 +92,7 @@ public class SlackAttachment {
     private String fallback;
     private String pretext;
     private String color;
+    private String text;
+    private String author_name;
+    private String author_icon;
 }

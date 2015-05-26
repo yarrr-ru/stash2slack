@@ -35,6 +35,16 @@ public class SlackPayload {
 
     private boolean mrkdwn;
 
+    public boolean isLinkNames() {
+        return link_names;
+    }
+
+    public void setLinkNames(boolean link_names) {
+        this.link_names = link_names;
+    }
+
+    private boolean link_names;
+
     private List<SlackAttachment> attachments = new LinkedList<SlackAttachment>();
 
     public void addAttachment(SlackAttachment slackAttachment) {

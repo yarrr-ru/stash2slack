@@ -6,9 +6,12 @@ import com.atlassian.stash.event.pull.PullRequestCommentActivityEvent;
 import com.atlassian.stash.event.pull.PullRequestRescopeActivityEvent;
 import com.atlassian.stash.nav.NavBuilder;
 import com.atlassian.stash.pull.PullRequestActivity;
+import com.atlassian.stash.pull.PullRequestParticipant;
 import com.atlassian.stash.pull.PullRequestRescopeActivity;
 import com.atlassian.stash.pull.PullRequestState;
 import com.atlassian.stash.repository.Repository;
+import com.atlassian.stash.avatar.AvatarService;
+import com.atlassian.stash.avatar.AvatarRequest;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.pragbits.stash.SlackGlobalSettingsService;
@@ -19,6 +22,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.Set;
 
 public class PullRequestActivityListener {
     static final String KEY_GLOBAL_SETTING_HOOK_URL = "stash2slack.globalsettings.hookurl";
@@ -28,16 +32,20 @@ public class PullRequestActivityListener {
     private final SlackSettingsService slackSettingsService;
     private final NavBuilder navBuilder;
     private final SlackNotifier slackNotifier;
+    private final AvatarService avatarService;
+    private final AvatarRequest avatarRequest = new AvatarRequest(true, 16, true);
     private final Gson gson = new Gson();
 
     public PullRequestActivityListener(SlackGlobalSettingsService slackGlobalSettingsService,
                                              SlackSettingsService slackSettingsService,
                                              NavBuilder navBuilder,
-                                             SlackNotifier slackNotifier) {
+                                             SlackNotifier slackNotifier,
+                                             AvatarService avatarService) {
         this.slackGlobalSettingsService = slackGlobalSettingsService;
         this.slackSettingsService = slackSettingsService;
         this.navBuilder = navBuilder;
         this.slackNotifier = slackNotifier;
+        this.avatarService = avatarService;
     }
 
     @EventListener
@@ -62,6 +70,7 @@ public class PullRequestActivityListener {
             long pullRequestId = event.getPullRequest().getId();
             String userName = event.getUser() != null ? event.getUser().getDisplayName() : "unknown user";
             String activity = event.getActivity().getAction().name();
+            String avatar = event.getUser() != null ? avatarService.getUrlForPerson(event.getUser(), avatarRequest) : "";
 
             // Ignore RESCOPED PR events
             if (activity.equalsIgnoreCase("RESCOPED") && event instanceof PullRequestRescopeActivityEvent) {
@@ -75,71 +84,183 @@ public class PullRequestActivityListener {
                     .overview()
                     .buildAbsolute();
 
-            String text = String.format("Pull request event: `%s`, activity: `%s` by `%s`. <%s|See details>",
-                    event.getPullRequest().getTitle(),
-                    activity,
-                    userName,
-                    url);
-
             SlackPayload payload = new SlackPayload();
             if (!slackSettings.getSlackChannelName().isEmpty()) {
                 payload.setChannel(slackSettings.getSlackChannelName());
             }
-            payload.setText(text);
             payload.setMrkdwn(true);
+            payload.setLinkNames(true);
 
             SlackAttachment attachment = new SlackAttachment();
-            attachment.setFallback(text);
-            //attachment.setPretext(String.format(""));
-            attachment.setColor("#aabbcc");
+            attachment.setAuthorName(userName);
+            attachment.setAuthorIcon(avatar);
 
-            SlackAttachmentField field = new SlackAttachmentField();
-            field.setTitle("Event details");
+            String color = "";
+            String fallback = "";
+            String text = "";
 
             switch (event.getActivity().getAction()) {
                 case OPENED:
-                    field.setValue(String.format("*%s* OPENED the pull request: `%s`", userName,  event.getPullRequest().getTitle()));
                     attachment.setColor("#2267c4"); // blue
+                    attachment.setFallback(String.format("%s opened pull request \"%s\". <%s|(open)>",
+                                                            userName,
+                                                            event.getPullRequest().getTitle(),
+                                                            url));
+                    attachment.setText(String.format("opened pull request <%s|#%d: %s>",
+                                                            url,
+                                                            event.getPullRequest().getId(),
+                                                            event.getPullRequest().getTitle()));
+
+                    this.addField(attachment, "Description", event.getPullRequest().getDescription());
+                    this.addReviewers(attachment, event.getPullRequest().getReviewers());
                     break;
-                case DECLINED:
-                    field.setValue(String.format("*%s* DECLINED the pull request", userName));
-                    attachment.setColor("#ff0024"); // red
-                    break;
-                case APPROVED:
-                    field.setValue(String.format("*%s* APPROVED the pull request", userName));
-                    attachment.setColor("#2dc422"); // green
-                    break;
-                case MERGED:
-                    field.setValue(String.format("*%s* MERGED the pull request", userName));
-                    attachment.setColor("#2dc422"); // green
-                    break;
+
                 case REOPENED:
-                    field.setValue(String.format("*%s* REOPENED the pull request", userName));
                     attachment.setColor("#2267c4"); // blue
+                    attachment.setFallback(String.format("%s reopened pull request \"%s\". <%s|(open)>",
+                                                            userName,
+                                                            event.getPullRequest().getTitle(),
+                                                            url));
+                    attachment.setText(String.format("reopened pull request <%s|#%d: %s>",
+                                                            url,
+                                                            event.getPullRequest().getId(),
+                                                            event.getPullRequest().getTitle()));
+
+                    this.addField(attachment, "Description", event.getPullRequest().getDescription());
+                    this.addReviewers(attachment, event.getPullRequest().getReviewers());
                     break;
-                case RESCOPED:
-                    field.setValue(String.format("*%s* RESCOPED the pull request", userName));
+
+                case UPDATED:
                     attachment.setColor("#9055fc"); // purple
+                    attachment.setFallback(String.format("%s updated pull request \"%s\". <%s|(open)>",
+                                                            userName,
+                                                            event.getPullRequest().getTitle(),
+                                                            url));
+                    attachment.setText(String.format("updated pull request <%s|#%d: %s>",
+                                                            url,
+                                                            event.getPullRequest().getId(),
+                                                            event.getPullRequest().getTitle()));
+
+                    this.addField(attachment, "Description", event.getPullRequest().getDescription());
+                    this.addReviewers(attachment, event.getPullRequest().getReviewers());
                     break;
+
+                case APPROVED:
+                    attachment.setColor("#2dc422"); // green
+                    attachment.setFallback(String.format("%s approved pull request \"%s\". <%s|(open)>",
+                                                            userName,
+                                                            event.getPullRequest().getTitle(),
+                                                            url));
+                    attachment.setText(String.format("approved pull request <%s|#%d: %s>",
+                                                            url,
+                                                            event.getPullRequest().getId(),
+                                                            event.getPullRequest().getTitle()));
+                    break;
+
                 case UNAPPROVED:
-                    field.setValue(String.format("*%s* UNAPPROVED the pull request", userName));
                     attachment.setColor("#ff0024"); // red
+                    attachment.setFallback(String.format("%s unapproved pull request \"%s\". <%s|(open)>",
+                                                            userName,
+                                                            event.getPullRequest().getTitle(),
+                                                            url));
+                    attachment.setText(String.format("unapproved pull request <%s|#%d: %s>",
+                                                            url,
+                                                            event.getPullRequest().getId(),
+                                                            event.getPullRequest().getTitle()));
+                    break;
+
+                case DECLINED:
+                    attachment.setColor("#ff0024"); // red
+                    attachment.setFallback(String.format("%s declined pull request \"%s\". <%s|(open)>",
+                                                            userName,
+                                                            event.getPullRequest().getTitle(),
+                                                            url));
+                    attachment.setText(String.format("declined pull request <%s|#%d: %s>",
+                                                            url,
+                                                            event.getPullRequest().getId(),
+                                                            event.getPullRequest().getTitle()));
+                    break;
+
+                case MERGED:
+                    attachment.setColor("#2dc422"); // green
+                    attachment.setFallback(String.format("%s merged pull request \"%s\". <%s|(open)>",
+                                                            userName,
+                                                            event.getPullRequest().getTitle(),
+                                                            url));
+                    attachment.setText(String.format("merged pull request <%s|#%d: %s>",
+                                                            url,
+                                                            event.getPullRequest().getId(),
+                                                            event.getPullRequest().getTitle()));
+                    break;
+
+                case RESCOPED:
+                    attachment.setColor("#9055fc"); // purple
+                    attachment.setFallback(String.format("%s rescoped on pull request \"%s\". <%s|(open)>",
+                                                            userName,
+                                                            event.getPullRequest().getTitle(),
+                                                            url));
+                    attachment.setText(String.format("rescoped on pull request <%s|#%d: %s>",
+                                                            url,
+                                                            event.getPullRequest().getId(),
+                                                            event.getPullRequest().getTitle()));
+                    break;
+
+                case COMMENTED:
+                    attachment.setColor("#439fe0"); // pale blue
+                    attachment.setFallback(String.format("%s commented on pull request \"%s\". <%s|(open)>",
+                                                            userName,
+                                                            event.getPullRequest().getTitle(),
+                                                            url));
+                    attachment.setText(String.format("commented on pull request <%s|#%d: %s>\n%s",
+                                                            url,
+                                                            event.getPullRequest().getId(),
+                                                            event.getPullRequest().getTitle(),
+                                                            ((PullRequestCommentActivityEvent)event).getActivity().getComment().getText()));
                     break;
             }
 
-            if (event instanceof PullRequestCommentActivityEvent) {
-                field.setValue(String.format("*%s* commented the pull request: `%s`",
-                        userName,
-                        ((PullRequestCommentActivityEvent)event).getActivity().getComment().getText()));
-            }
+            SlackAttachmentField projectField = new SlackAttachmentField();
+            projectField.setTitle("Source");
+            projectField.setValue(String.format("_%s — %s_\n`%s`",
+                event.getPullRequest().getFromRef().getRepository().getProject().getName(),
+                event.getPullRequest().getFromRef().getRepository().getName(),
+                event.getPullRequest().getFromRef().getDisplayId()));
+            projectField.setShort(true);
+            attachment.addField(projectField);
 
-            field.setShort(false);
-            attachment.addField(field);
+            SlackAttachmentField repoField = new SlackAttachmentField();
+            repoField.setTitle("Destination");
+            repoField.setValue(String.format("_%s — %s_\n`%s`",
+                event.getPullRequest().getFromRef().getRepository().getProject().getName(),
+                event.getPullRequest().getToRef().getRepository().getName(),
+                event.getPullRequest().getToRef().getDisplayId()));
+            repoField.setShort(true);
+            attachment.addField(repoField);
+
             payload.addAttachment(attachment);
             String jsonPayload = gson.toJson(payload);
 
             slackNotifier.SendSlackNotification(hookSelector.getSelectedHook(), jsonPayload);
         }
 
+    }
+
+    private void addField(SlackAttachment attachment, String title, String message) {
+        SlackAttachmentField field = new SlackAttachmentField();
+        field.setTitle(title);
+        field.setValue(message);
+        field.setShort(false);
+        attachment.addField(field);
+    }
+
+    private void addReviewers(SlackAttachment attachment, Set<PullRequestParticipant> reviewers) {
+        if (reviewers.isEmpty()) {
+            return;
+        }
+        String names = "";
+        for(PullRequestParticipant p : reviewers) {
+            names += String.format("@%s ", p.getUser().getSlug());
+        }
+        this.addField(attachment, "Reviewers", names);
     }
 }
