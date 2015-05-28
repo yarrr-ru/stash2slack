@@ -3,6 +3,7 @@
 /**
  * @param repository
  * @param slackSettings
+ * @param pushNotificationLevels
  **/
 {template .viewSlackSettings}
 <html>
@@ -94,11 +95,7 @@
                     {param id: 'slackPushNotificationLevel' /}
                     {param labelContent: stash_i18n('stash.web.slack.settings.push.notification.level.label', 'Notification level') /}
                     {param value: $slackSettings.pushNotificationLevel /}
-                    {param options: [
-                        [ 'text': 'Minimal', 'value': 'MINIMAL' ],
-                        [ 'text': 'Compact', 'value': 'COMPACT' ],
-                        [ 'text': 'Verbose', 'value': 'VERBOSE' ]
-                    ] /}
+                    {param options: $pushNotificationLevels /}
                 {/call}
 
                 <h4>Channel and hook overrides</h4>

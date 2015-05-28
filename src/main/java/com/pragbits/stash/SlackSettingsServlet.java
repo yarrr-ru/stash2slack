@@ -11,6 +11,8 @@ import com.atlassian.webresource.api.assembler.PageBuilderService;
 import com.atlassian.stash.i18n.I18nService;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
+import com.pragbits.stash.soy.SelectFieldOptions;
+
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -165,6 +167,7 @@ public class SlackSettingsServlet extends HttpServlet {
                 ImmutableMap.<String, Object>builder()
                         .put("repository", repository)
                         .put("slackSettings", slackSettings)
+                        .put("pushNotificationLevels", new SelectFieldOptions(PushNotificationLevel.values()).toSoyStructure())
                         .build()
         );
     }
