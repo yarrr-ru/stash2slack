@@ -9,6 +9,7 @@ import com.atlassian.stash.nav.NavBuilder;
 import com.pragbits.stash.PluginMetadata;
 import com.atlassian.stash.repository.Repository;
 import com.atlassian.stash.repository.RepositoryService;
+import com.atlassian.stash.avatar.AvatarService;
 import com.atlassian.stash.user.Permission;
 import com.atlassian.stash.user.PermissionValidationService;
 import com.atlassian.webresource.api.assembler.PageBuilderService;
