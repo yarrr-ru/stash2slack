@@ -23,6 +23,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -70,10 +71,6 @@ public class RepositoryPushActivityListener {
 
             for (RefChange refChange : event.getRefChanges()) {
                 SlackPayload payload = new SlackPayload();
-                if (!slackSettings.getSlackChannelName().isEmpty()) {
-                    payload.setChannel(slackSettings.getSlackChannelName());
-                }
-
 
                 String url = navBuilder
                         .project(projectName)
@@ -133,8 +130,20 @@ public class RepositoryPushActivityListener {
                     payload.addAttachment(attachment);
                 }
 
+                // slackSettings.getSlackChannelName might be:
+                // - empty
+                // - comma separated list of channel names, eg: #mych1, #mych2, #mych3
 
-                slackNotifier.SendSlackNotification(hookSelector.getSelectedHook(), gson.toJson(payload));
+                if (slackSettings.getSlackChannelName().isEmpty()) {
+                    slackNotifier.SendSlackNotification(hookSelector.getSelectedHook(), gson.toJson(payload));
+                } else {
+                    // send message to multiple channels
+                    List<String> channels = Arrays.asList(slackSettings.getSlackChannelName().split("\\s*,\\s*"));
+                    for (String channel: channels) {
+                        payload.setChannel(channel.trim());
+                        slackNotifier.SendSlackNotification(hookSelector.getSelectedHook(), gson.toJson(payload));
+                    }
+                }
             }
 
         }
