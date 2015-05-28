@@ -22,6 +22,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Set;
 
 public class PullRequestActivityListener {
@@ -117,9 +119,6 @@ public class PullRequestActivityListener {
                     .buildAbsolute();
 
             SlackPayload payload = new SlackPayload();
-            if (!slackSettings.getSlackChannelName().isEmpty()) {
-                payload.setChannel(slackSettings.getSlackChannelName());
-            }
             payload.setMrkdwn(true);
             payload.setLinkNames(true);
 
@@ -270,9 +269,21 @@ public class PullRequestActivityListener {
             attachment.addField(repoField);
 
             payload.addAttachment(attachment);
-            String jsonPayload = gson.toJson(payload);
 
-            slackNotifier.SendSlackNotification(hookSelector.getSelectedHook(), jsonPayload);
+            // slackSettings.getSlackChannelName might be:
+            // - empty
+            // - comma separated list of channel names, eg: #mych1, #mych2, #mych3
+
+            if (slackSettings.getSlackChannelName().isEmpty()) {
+                slackNotifier.SendSlackNotification(hookSelector.getSelectedHook(), gson.toJson(payload));
+            } else {
+                // send message to multiple channels
+                List<String> channels = Arrays.asList(slackSettings.getSlackChannelName().split("\\s*,\\s*"));
+                for (String channel: channels) {
+                    payload.setChannel(channel.trim());
+                    slackNotifier.SendSlackNotification(hookSelector.getSelectedHook(), gson.toJson(payload));
+                }
+            }
         }
 
     }

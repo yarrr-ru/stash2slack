@@ -96,7 +96,7 @@
                     {param id: 'slackChannelName' /}
                     {param labelContent: stash_i18n('stash.web.slack.settings.slack.channel', 'Channel name') /}
                     {param initialValue: $slackSettings.slackChannelName /}
-                    {param description: stash_i18n('stash.web.slack.settings.slack.channel.description', 'Slack channel to use. If empty, #general will be used') /}
+                    {param description: stash_i18n('stash.web.slack.settings.slack.channel.description', 'Slack channel to use. Accepts a single channel name (example: #ch1), a comma separated list of channels (example: #ch1, #ch2, #ch3), or you can leave it empty. When empty, the default channel will be used within the webhook.') /}
                 {/call}
                 {call widget.aui.form.text}
                     {param id: 'slackWebHookUrl' /}
