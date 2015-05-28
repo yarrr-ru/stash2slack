@@ -63,6 +63,46 @@ public class SlackSettingsServlet extends HttpServlet {
           enabled = true;
         }
 
+        boolean openedEnabled = false;
+        if (null != req.getParameter("slackNotificationsOpenedEnabled") && req.getParameter("slackNotificationsOpenedEnabled").equals("on")) {
+            openedEnabled = true;
+        }
+
+        boolean reopenedEnabled = false;
+        if (null != req.getParameter("slackNotificationsReopenedEnabled") && req.getParameter("slackNotificationsReopenedEnabled").equals("on")) {
+            reopenedEnabled = true;
+        }
+
+        boolean updatedEnabled = false;
+        if (null != req.getParameter("slackNotificationsUpdatedEnabled") && req.getParameter("slackNotificationsUpdatedEnabled").equals("on")) {
+            updatedEnabled = true;
+        }
+
+        boolean approvedEnabled = false;
+        if (null != req.getParameter("slackNotificationsApprovedEnabled") && req.getParameter("slackNotificationsApprovedEnabled").equals("on")) {
+            approvedEnabled = true;
+        }
+
+        boolean unapprovedEnabled = false;
+        if (null != req.getParameter("slackNotificationsUnapprovedEnabled") && req.getParameter("slackNotificationsUnapprovedEnabled").equals("on")) {
+            unapprovedEnabled = true;
+        }
+
+        boolean declinedEnabled = false;
+        if (null != req.getParameter("slackNotificationsDeclinedEnabled") && req.getParameter("slackNotificationsDeclinedEnabled").equals("on")) {
+            declinedEnabled = true;
+        }
+
+        boolean mergedEnabled = false;
+        if (null != req.getParameter("slackNotificationsMergedEnabled") && req.getParameter("slackNotificationsMergedEnabled").equals("on")) {
+            mergedEnabled = true;
+        }
+
+        boolean commentedEnabled = false;
+        if (null != req.getParameter("slackNotificationsCommentedEnabled") && req.getParameter("slackNotificationsCommentedEnabled").equals("on")) {
+            commentedEnabled = true;
+        }
+
         boolean enabledPush = false;
         if (null != req.getParameter("slackNotificationsEnabledForPush") && req.getParameter("slackNotificationsEnabledForPush").equals("on")) {
             enabledPush = true;
@@ -70,7 +110,21 @@ public class SlackSettingsServlet extends HttpServlet {
 
         String channel = req.getParameter("slackChannelName");
         String webHookUrl = req.getParameter("slackWebHookUrl");
-        slackSettingsService.setSlackSettings(repository, new ImmutableSlackSettings(enabled, enabledPush, channel, webHookUrl));
+        slackSettingsService.setSlackSettings(
+                repository,
+                new ImmutableSlackSettings(
+                        enabled,
+                        openedEnabled,
+                        reopenedEnabled,
+                        updatedEnabled,
+                        approvedEnabled,
+                        unapprovedEnabled,
+                        declinedEnabled,
+                        mergedEnabled,
+                        commentedEnabled,
+                        enabledPush,
+                        channel,
+                        webHookUrl));
 
         doGet(req, res);
     }

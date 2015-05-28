@@ -22,18 +22,76 @@
         {call widget.aui.form.form}
             {param action: '' /}
             {param content}
+                <h4>Pull request notifications</h4>
                 {call widget.aui.form.checkbox}
                     {param id: 'slackNotificationsEnabled' /}
                     {param labelContent: stash_i18n('stash.web.slack.settings.slack.enabled.label', 'Enable slack notifications for pull requests') /}
                     {param checked: $slackSettings.slackNotificationsEnabled /}
                     {param description: stash_i18n('stash.web.slack.settings.slack.enabled.description', 'If enabled, users will receive slack notifications about pull request activities') /}
                 {/call}
+
+                <div style="padding-left: 20px;">
+                    <p>Filter pull request events based on activity types</p>
+                    {call widget.aui.form.checkbox}
+                        {param id: 'slackNotificationsOpenedEnabled' /}
+                        {param labelContent: stash_i18n('stash.web.slack.settings.slack.opened.enabled.label', 'Opened') /}
+                        {param checked: $slackSettings.slackNotificationsOpenedEnabled /}
+                        {param description: stash_i18n('stash.web.slack.settings.slack.opened.enabled.description', 'Send notifications for Opened PR events') /}
+                    {/call}
+                    {call widget.aui.form.checkbox}
+                        {param id: 'slackNotificationsReopenedEnabled' /}
+                        {param labelContent: stash_i18n('stash.web.slack.settings.slack.reopened.enabled.label', 'Reopened') /}
+                        {param checked: $slackSettings.slackNotificationsReopenedEnabled /}
+                        {param description: stash_i18n('stash.web.slack.settings.slack.reopened.enabled.description', 'Send notifications for Reopened PR events') /}
+                    {/call}
+                    {call widget.aui.form.checkbox}
+                        {param id: 'slackNotificationsUpdatedEnabled' /}
+                        {param labelContent: stash_i18n('stash.web.slack.settings.slack.updated.enabled.label', 'Updated') /}
+                        {param checked: $slackSettings.slackNotificationsUpdatedEnabled /}
+                        {param description: stash_i18n('stash.web.slack.settings.slack.updated.enabled.description', 'Send notifications for Updated PR events') /}
+                    {/call}
+                    {call widget.aui.form.checkbox}
+                        {param id: 'slackNotificationsApprovedEnabled' /}
+                        {param labelContent: stash_i18n('stash.web.slack.settings.slack.approved.enabled.label', 'Approved') /}
+                        {param checked: $slackSettings.slackNotificationsApprovedEnabled /}
+                        {param description: stash_i18n('stash.web.slack.settings.slack.approved.enabled.description', 'Send notifications for Approved PR events') /}
+                    {/call}
+                    {call widget.aui.form.checkbox}
+                        {param id: 'slackNotificationsUnapprovedEnabled' /}
+                        {param labelContent: stash_i18n('stash.web.slack.settings.slack.unapproved.enabled.label', 'Unapproved') /}
+                        {param checked: $slackSettings.slackNotificationsUnapprovedEnabled /}
+                        {param description: stash_i18n('stash.web.slack.settings.slack.unapproved.enabled.description', 'Send notifications for Unapproved PR events') /}
+                    {/call}
+                    {call widget.aui.form.checkbox}
+                        {param id: 'slackNotificationsDeclinedEnabled' /}
+                        {param labelContent: stash_i18n('stash.web.slack.settings.slack.declined.enabled.label', 'Declined') /}
+                        {param checked: $slackSettings.slackNotificationsDeclinedEnabled /}
+                        {param description: stash_i18n('stash.web.slack.settings.slack.declined.enabled.description', 'Send notifications for Declined PR events') /}
+                    {/call}
+                    {call widget.aui.form.checkbox}
+                        {param id: 'slackNotificationsMergedEnabled' /}
+                        {param labelContent: stash_i18n('stash.web.slack.settings.slack.merged.enabled.label', 'Merged') /}
+                        {param checked: $slackSettings.slackNotificationsMergedEnabled /}
+                        {param description: stash_i18n('stash.web.slack.settings.slack.merged.enabled.description', 'Send notifications for Merged PR events') /}
+                    {/call}
+                    {call widget.aui.form.checkbox}
+                        {param id: 'slackNotificationsCommentedEnabled' /}
+                        {param labelContent: stash_i18n('stash.web.slack.settings.slack.commented.enabled.label', 'Commented') /}
+                        {param checked: $slackSettings.slackNotificationsCommentedEnabled /}
+                        {param description: stash_i18n('stash.web.slack.settings.slack.commented.enabled.description', 'Send notifications for Commented PR events') /}
+                    {/call}
+                </div>
+
+                <h4>Push notifications</h4>
+
                 {call widget.aui.form.checkbox}
                     {param id: 'slackNotificationsEnabledForPush' /}
                     {param labelContent: stash_i18n('stash.web.slack.settings.slack.push.enabled.label', 'Enable slack notifications for push') /}
                     {param checked: $slackSettings.slackNotificationsEnabledForPush /}
                     {param description: stash_i18n('stash.web.slack.settings.slack.push.enabled.description', 'If enabled, users will receive slack notifications about push activities') /}
                 {/call}
+
+                <h4>Channel and hook overrides</h4>
                 {call widget.aui.form.text}
                     {param id: 'slackChannelName' /}
                     {param labelContent: stash_i18n('stash.web.slack.settings.slack.channel', 'Channel name') /}

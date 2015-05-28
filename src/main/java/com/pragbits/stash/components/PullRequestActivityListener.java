@@ -77,6 +77,38 @@ public class PullRequestActivityListener {
                 return;
             }
 
+            if (activity.equalsIgnoreCase("OPENED") && !slackSettings.isSlackNotificationsOpenedEnabled()) {
+                return;
+            }
+
+            if (activity.equalsIgnoreCase("REOPENED") && !slackSettings.isSlackNotificationsReopenedEnabled()) {
+                return;
+            }
+
+            if (activity.equalsIgnoreCase("UPDATED") && !slackSettings.isSlackNotificationsUpdatedEnabled()) {
+                return;
+            }
+
+            if (activity.equalsIgnoreCase("APPROVED") && !slackSettings.isSlackNotificationsApprovedEnabled()) {
+                return;
+            }
+
+            if (activity.equalsIgnoreCase("UNAPPROVED") && !slackSettings.isSlackNotificationsUnapprovedEnabled()) {
+                return;
+            }
+
+            if (activity.equalsIgnoreCase("DECLINED") && !slackSettings.isSlackNotificationsDeclinedEnabled()) {
+                return;
+            }
+
+            if (activity.equalsIgnoreCase("MERGED") && !slackSettings.isSlackNotificationsMergedEnabled()) {
+                return;
+            }
+
+            if (activity.equalsIgnoreCase("COMMENTED") && !slackSettings.isSlackNotificationsCommentedEnabled()) {
+                return;
+            }
+            
             String url = navBuilder
                     .project(projectName)
                     .repo(repoName)
