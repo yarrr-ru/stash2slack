@@ -3,10 +3,6 @@ package com.pragbits.stash;
 import com.atlassian.soy.renderer.SoyException;
 import com.atlassian.soy.renderer.SoyTemplateRenderer;
 import com.atlassian.stash.exception.AuthorisationException;
-import com.atlassian.stash.nav.NavBuilder;
-import com.pragbits.stash.SlackSettings;
-import com.pragbits.stash.SlackSettingsService;
-import com.pragbits.stash.PluginMetadata;
 import com.atlassian.stash.repository.Repository;
 import com.atlassian.stash.repository.RepositoryService;
 import com.atlassian.stash.user.Permission;
@@ -15,6 +11,8 @@ import com.atlassian.webresource.api.assembler.PageBuilderService;
 import com.atlassian.stash.i18n.I18nService;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
+import com.pragbits.stash.soy.SelectFieldOptions;
+
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -108,6 +106,11 @@ public class SlackSettingsServlet extends HttpServlet {
             enabledPush = true;
         }
 
+        PushNotificationLevel pushNotificationLevel = PushNotificationLevel.VERBOSE;
+        if (null != req.getParameter("slackPushNotificationLevel")) {
+            pushNotificationLevel = PushNotificationLevel.valueOf(req.getParameter("slackPushNotificationLevel"));
+        }
+
         String channel = req.getParameter("slackChannelName");
         String webHookUrl = req.getParameter("slackWebHookUrl");
         slackSettingsService.setSlackSettings(
@@ -123,6 +126,7 @@ public class SlackSettingsServlet extends HttpServlet {
                         mergedEnabled,
                         commentedEnabled,
                         enabledPush,
+                        pushNotificationLevel,
                         channel,
                         webHookUrl));
 
@@ -163,6 +167,7 @@ public class SlackSettingsServlet extends HttpServlet {
                 ImmutableMap.<String, Object>builder()
                         .put("repository", repository)
                         .put("slackSettings", slackSettings)
+                        .put("pushNotificationLevels", new SelectFieldOptions(PushNotificationLevel.values()).toSoyStructure())
                         .build()
         );
     }

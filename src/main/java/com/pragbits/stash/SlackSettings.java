@@ -12,6 +12,7 @@ public interface SlackSettings {
     boolean isSlackNotificationsMergedEnabled();
     boolean isSlackNotificationsCommentedEnabled();
     boolean isSlackNotificationsEnabledForPush();
+    PushNotificationLevel getPushNotificationLevel();
     String getSlackChannelName();
     String getSlackWebHookUrl();
 

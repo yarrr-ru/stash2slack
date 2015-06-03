@@ -5,15 +5,12 @@ import com.atlassian.stash.event.pull.PullRequestActivityEvent;
 import com.atlassian.stash.event.pull.PullRequestCommentActivityEvent;
 import com.atlassian.stash.event.pull.PullRequestRescopeActivityEvent;
 import com.atlassian.stash.nav.NavBuilder;
-import com.atlassian.stash.pull.PullRequestActivity;
 import com.atlassian.stash.pull.PullRequestParticipant;
-import com.atlassian.stash.pull.PullRequestRescopeActivity;
-import com.atlassian.stash.pull.PullRequestState;
 import com.atlassian.stash.repository.Repository;
 import com.atlassian.stash.avatar.AvatarService;
 import com.atlassian.stash.avatar.AvatarRequest;
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+import com.pragbits.stash.ColorCode;
 import com.pragbits.stash.SlackGlobalSettingsService;
 import com.pragbits.stash.SlackSettings;
 import com.pragbits.stash.SlackSettingsService;
@@ -21,7 +18,6 @@ import com.pragbits.stash.tools.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
@@ -132,7 +128,7 @@ public class PullRequestActivityListener {
 
             switch (event.getActivity().getAction()) {
                 case OPENED:
-                    attachment.setColor("#2267c4"); // blue
+                    attachment.setColor(ColorCode.BLUE.getCode());
                     attachment.setFallback(String.format("%s opened pull request \"%s\". <%s|(open)>",
                                                             userName,
                                                             event.getPullRequest().getTitle(),
@@ -147,7 +143,7 @@ public class PullRequestActivityListener {
                     break;
 
                 case REOPENED:
-                    attachment.setColor("#2267c4"); // blue
+                    attachment.setColor(ColorCode.BLUE.getCode());
                     attachment.setFallback(String.format("%s reopened pull request \"%s\". <%s|(open)>",
                                                             userName,
                                                             event.getPullRequest().getTitle(),
@@ -162,7 +158,7 @@ public class PullRequestActivityListener {
                     break;
 
                 case UPDATED:
-                    attachment.setColor("#9055fc"); // purple
+                    attachment.setColor(ColorCode.PURPLE.getCode());
                     attachment.setFallback(String.format("%s updated pull request \"%s\". <%s|(open)>",
                                                             userName,
                                                             event.getPullRequest().getTitle(),
@@ -177,7 +173,7 @@ public class PullRequestActivityListener {
                     break;
 
                 case APPROVED:
-                    attachment.setColor("#2dc422"); // green
+                    attachment.setColor(ColorCode.GREEN.getCode());
                     attachment.setFallback(String.format("%s approved pull request \"%s\". <%s|(open)>",
                                                             userName,
                                                             event.getPullRequest().getTitle(),
@@ -189,7 +185,7 @@ public class PullRequestActivityListener {
                     break;
 
                 case UNAPPROVED:
-                    attachment.setColor("#ff0024"); // red
+                    attachment.setColor(ColorCode.RED.getCode());
                     attachment.setFallback(String.format("%s unapproved pull request \"%s\". <%s|(open)>",
                                                             userName,
                                                             event.getPullRequest().getTitle(),
@@ -201,7 +197,7 @@ public class PullRequestActivityListener {
                     break;
 
                 case DECLINED:
-                    attachment.setColor("#ff0024"); // red
+                    attachment.setColor(ColorCode.RED.getCode());
                     attachment.setFallback(String.format("%s declined pull request \"%s\". <%s|(open)>",
                                                             userName,
                                                             event.getPullRequest().getTitle(),
@@ -213,7 +209,7 @@ public class PullRequestActivityListener {
                     break;
 
                 case MERGED:
-                    attachment.setColor("#2dc422"); // green
+                    attachment.setColor(ColorCode.GREEN.getCode());
                     attachment.setFallback(String.format("%s merged pull request \"%s\". <%s|(open)>",
                                                             userName,
                                                             event.getPullRequest().getTitle(),
@@ -225,7 +221,7 @@ public class PullRequestActivityListener {
                     break;
 
                 case RESCOPED:
-                    attachment.setColor("#9055fc"); // purple
+                    attachment.setColor(ColorCode.PURPLE.getCode());
                     attachment.setFallback(String.format("%s rescoped on pull request \"%s\". <%s|(open)>",
                                                             userName,
                                                             event.getPullRequest().getTitle(),
@@ -237,7 +233,7 @@ public class PullRequestActivityListener {
                     break;
 
                 case COMMENTED:
-                    attachment.setColor("#439fe0"); // pale blue
+                    attachment.setColor(ColorCode.PALE_BLUE.getCode());
                     attachment.setFallback(String.format("%s commented on pull request \"%s\". <%s|(open)>",
                                                             userName,
                                                             event.getPullRequest().getTitle(),

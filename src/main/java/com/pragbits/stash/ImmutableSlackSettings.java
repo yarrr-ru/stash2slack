@@ -12,6 +12,7 @@ public class ImmutableSlackSettings implements SlackSettings {
     private final boolean slackNotificationsMergedEnabled;
     private final boolean slackNotificationsCommentedEnabled;
     private final boolean slackNotificationsEnabledForPush;
+    private final PushNotificationLevel pushNotificationLevel;
     private final String slackChannelName;
     private final String slackWebHookUrl;
 
@@ -25,6 +26,7 @@ public class ImmutableSlackSettings implements SlackSettings {
                                   boolean slackNotificationsMergedEnabled,
                                   boolean slackNotificationsCommentedEnabled,
                                   boolean slackNotificationsEnabledForPush,
+                                  PushNotificationLevel pushNotificationLevel,
                                   String slackChannelName,
                                   String slackWebHookUrl) {
         this.slackNotificationsEnabled = slackNotificationsEnabled;
@@ -37,6 +39,7 @@ public class ImmutableSlackSettings implements SlackSettings {
         this.slackNotificationsMergedEnabled = slackNotificationsMergedEnabled;
         this.slackNotificationsCommentedEnabled = slackNotificationsCommentedEnabled;
         this.slackNotificationsEnabledForPush = slackNotificationsEnabledForPush;
+        this.pushNotificationLevel = pushNotificationLevel;
         this.slackChannelName = slackChannelName;
         this.slackWebHookUrl = slackWebHookUrl;
     }
@@ -81,6 +84,10 @@ public class ImmutableSlackSettings implements SlackSettings {
         return slackNotificationsEnabledForPush;
     }
 
+    public PushNotificationLevel getPushNotificationLevel() {
+        return pushNotificationLevel;
+    }
+
     public String getSlackChannelName() {
         return slackChannelName;
     }
@@ -101,6 +108,7 @@ public class ImmutableSlackSettings implements SlackSettings {
                 ", slackNotificationsMergedEnabled=" + slackNotificationsMergedEnabled +
                 ", slackNotificationsCommentedEnabled=" + slackNotificationsCommentedEnabled +
                 ", slackNotificationsEnabledForPush=" + slackNotificationsEnabledForPush +
+                ", pushNotificationLevel=" + pushNotificationLevel +
                 ", slackChannelName=" + slackChannelName +
                 ", slackWebHookUrl=" + slackWebHookUrl + "}";
     }

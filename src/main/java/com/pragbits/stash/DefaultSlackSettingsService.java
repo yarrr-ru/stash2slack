@@ -2,8 +2,6 @@ package com.pragbits.stash;
 
 import com.atlassian.sal.api.pluginsettings.PluginSettings;
 import com.atlassian.sal.api.pluginsettings.PluginSettingsFactory;
-import com.pragbits.stash.SlackSettings;
-import com.pragbits.stash.SlackSettingsService;
 import com.atlassian.stash.repository.Repository;
 import com.atlassian.stash.user.Permission;
 import com.atlassian.stash.user.PermissionValidationService;
@@ -32,6 +30,7 @@ public class DefaultSlackSettingsService implements SlackSettingsService {
             true,   // merged
             true,   // commented
             false,  // push enabled
+            PushNotificationLevel.VERBOSE,
             "",     // channel name override
             "");    // webhook override
 
@@ -45,6 +44,7 @@ public class DefaultSlackSettingsService implements SlackSettingsService {
     static final String KEY_SLACK_MERGED_NOTIFICATION = "slackNotificationsMergedEnabled";
     static final String KEY_SLACK_COMMENTED_NOTIFICATION = "slackNotificationsCommentedEnabled";
     static final String KEY_SLACK_NOTIFICATION_PUSH = "slackNotificationsEnabledForPush";
+    static final String KEY_SLACK_PUSH_NOTIFICATION_LEVEL = "slackPushNotificationLevel";
     static final String KEY_SLACK_CHANNEL_NAME = "slackChannelName";
     static final String KEY_SLACK_WEBHOOK_URL = "slackWebHookUrl";
 
@@ -105,6 +105,7 @@ public class DefaultSlackSettingsService implements SlackSettingsService {
                 .put(KEY_SLACK_MERGED_NOTIFICATION, Boolean.toString(settings.isSlackNotificationsMergedEnabled()))
                 .put(KEY_SLACK_COMMENTED_NOTIFICATION, Boolean.toString(settings.isSlackNotificationsCommentedEnabled()))
                 .put(KEY_SLACK_NOTIFICATION_PUSH, Boolean.toString(settings.isSlackNotificationsEnabledForPush()))
+                .put(KEY_SLACK_PUSH_NOTIFICATION_LEVEL, settings.getPushNotificationLevel().toString())
                 .put(KEY_SLACK_CHANNEL_NAME, settings.getSlackChannelName().isEmpty() ? " " : settings.getSlackChannelName())
                 .put(KEY_SLACK_WEBHOOK_URL, settings.getSlackWebHookUrl().isEmpty() ? " " : settings.getSlackWebHookUrl())
                 .build();
@@ -126,6 +127,7 @@ public class DefaultSlackSettingsService implements SlackSettingsService {
                 Boolean.parseBoolean(settings.get(KEY_SLACK_MERGED_NOTIFICATION)),
                 Boolean.parseBoolean(settings.get(KEY_SLACK_COMMENTED_NOTIFICATION)),
                 Boolean.parseBoolean(settings.get(KEY_SLACK_NOTIFICATION_PUSH)),
+                settings.containsKey(KEY_SLACK_PUSH_NOTIFICATION_LEVEL) ? PushNotificationLevel.valueOf(settings.get(KEY_SLACK_PUSH_NOTIFICATION_LEVEL)) : PushNotificationLevel.VERBOSE,
                 settings.get(KEY_SLACK_CHANNEL_NAME).toString().equals(" ") ? "" : settings.get(KEY_SLACK_CHANNEL_NAME).toString(),
                 settings.get(KEY_SLACK_WEBHOOK_URL).toString().equals(" ") ? "" : settings.get(KEY_SLACK_WEBHOOK_URL).toString()
         );

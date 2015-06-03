@@ -3,6 +3,7 @@
 /**
  * @param repository
  * @param slackSettings
+ * @param pushNotificationLevels
  **/
 {template .viewSlackSettings}
 <html>
@@ -89,6 +90,12 @@
                     {param labelContent: stash_i18n('stash.web.slack.settings.slack.push.enabled.label', 'Enable slack notifications for push') /}
                     {param checked: $slackSettings.slackNotificationsEnabledForPush /}
                     {param description: stash_i18n('stash.web.slack.settings.slack.push.enabled.description', 'If enabled, users will receive slack notifications about push activities') /}
+                {/call}
+                {call aui.form.selectField}
+                    {param id: 'slackPushNotificationLevel' /}
+                    {param labelContent: stash_i18n('stash.web.slack.settings.push.notification.level.label', 'Notification level') /}
+                    {param value: $slackSettings.pushNotificationLevel /}
+                    {param options: $pushNotificationLevels /}
                 {/call}
 
                 <h4>Channel and hook overrides</h4>
