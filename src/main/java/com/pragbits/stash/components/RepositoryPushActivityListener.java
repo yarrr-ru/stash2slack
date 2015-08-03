@@ -28,6 +28,7 @@ import java.util.List;
 
 public class RepositoryPushActivityListener {
     static final String KEY_GLOBAL_SETTING_HOOK_URL = "stash2slack.globalsettings.hookurl";
+    static final String KEY_GLOBAL_SLACK_CHANNEL_NAME = "stash2slack.globalsettings.channelname";
     private static final Logger log = LoggerFactory.getLogger(RepositoryPushActivityListener.class);
 
     private final SlackGlobalSettingsService slackGlobalSettingsService;
@@ -63,6 +64,7 @@ public class RepositoryPushActivityListener {
         if (resolvedSlackSettings.isSlackNotificationsEnabledForPush()) {
             String localHookUrl = slackSettings.getSlackWebHookUrl();
             WebHookSelector hookSelector = new WebHookSelector(globalHookUrl, localHookUrl);
+            ChannelSelector channelSelector = new ChannelSelector(slackGlobalSettingsService.getChannelName(KEY_GLOBAL_SLACK_CHANNEL_NAME), slackSettings.getSlackChannelName());
 
             if (!hookSelector.isHookValid()) {
                 log.error("There is no valid configured Web hook url! Reason: " + hookSelector.getProblem());
@@ -133,11 +135,11 @@ public class RepositoryPushActivityListener {
                 // - empty
                 // - comma separated list of channel names, eg: #mych1, #mych2, #mych3
 
-                if (resolvedSlackSettings.getSlackChannelName().isEmpty()) {
+                if (channelSelector.getSelectedChannel().isEmpty()) {
                     slackNotifier.SendSlackNotification(hookSelector.getSelectedHook(), gson.toJson(payload));
                 } else {
                     // send message to multiple channels
-                    List<String> channels = Arrays.asList(slackSettings.getSlackChannelName().split("\\s*,\\s*"));
+                    List<String> channels = Arrays.asList(channelSelector.getSelectedChannel().split("\\s*,\\s*"));
                     for (String channel: channels) {
                         payload.setChannel(channel.trim());
                         slackNotifier.SendSlackNotification(hookSelector.getSelectedHook(), gson.toJson(payload));
