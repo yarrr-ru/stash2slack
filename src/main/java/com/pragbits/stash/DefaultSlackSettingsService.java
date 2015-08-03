@@ -20,6 +20,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class DefaultSlackSettingsService implements SlackSettingsService {
 
     static final ImmutableSlackSettings DEFAULT_CONFIG = new ImmutableSlackSettings(
+            false,  // pr settings override enabled
             false,  // pull requests enabled
             true,   // opened
             true,   // reopened
@@ -30,10 +31,12 @@ public class DefaultSlackSettingsService implements SlackSettingsService {
             true,   // merged
             true,   // commented
             false,  // push enabled
-            PushNotificationLevel.VERBOSE,
+            NotificationLevel.VERBOSE,
+            NotificationLevel.VERBOSE,
             "",     // channel name override
             "");    // webhook override
 
+    static final String KEY_SLACK_OVERRIDE_NOTIFICATION = "slackNotificationsOverrideEnabled";
     static final String KEY_SLACK_NOTIFICATION = "slackNotificationsEnabled";
     static final String KEY_SLACK_OPENED_NOTIFICATION = "slackNotificationsOpenedEnabled";
     static final String KEY_SLACK_REOPENED_NOTIFICATION = "slackNotificationsReopenedEnabled";
@@ -44,7 +47,8 @@ public class DefaultSlackSettingsService implements SlackSettingsService {
     static final String KEY_SLACK_MERGED_NOTIFICATION = "slackNotificationsMergedEnabled";
     static final String KEY_SLACK_COMMENTED_NOTIFICATION = "slackNotificationsCommentedEnabled";
     static final String KEY_SLACK_NOTIFICATION_PUSH = "slackNotificationsEnabledForPush";
-    static final String KEY_SLACK_PUSH_NOTIFICATION_LEVEL = "slackPushNotificationLevel";
+    static final String KEY_SLACK_NOTIFICATION_LEVEL = "slackNotificationLevel";
+    static final String KEY_SLACK_NOTIFICATION_PR_LEVEL = "slackNotificationPrLevel";
     static final String KEY_SLACK_CHANNEL_NAME = "slackChannelName";
     static final String KEY_SLACK_WEBHOOK_URL = "slackWebHookUrl";
 
@@ -95,6 +99,7 @@ public class DefaultSlackSettingsService implements SlackSettingsService {
     // probably I don't know someyhing here. Applying a hack
     private Map<String, String> serialize(SlackSettings settings) {
         ImmutableMap<String, String> immutableMap = ImmutableMap.<String, String>builder()
+                .put(KEY_SLACK_OVERRIDE_NOTIFICATION, Boolean.toString(settings.isSlackNotificationsOverrideEnabled()))
                 .put(KEY_SLACK_NOTIFICATION, Boolean.toString(settings.isSlackNotificationsEnabled()))
                 .put(KEY_SLACK_OPENED_NOTIFICATION, Boolean.toString(settings.isSlackNotificationsOpenedEnabled()))
                 .put(KEY_SLACK_REOPENED_NOTIFICATION, Boolean.toString(settings.isSlackNotificationsReopenedEnabled()))
@@ -105,7 +110,8 @@ public class DefaultSlackSettingsService implements SlackSettingsService {
                 .put(KEY_SLACK_MERGED_NOTIFICATION, Boolean.toString(settings.isSlackNotificationsMergedEnabled()))
                 .put(KEY_SLACK_COMMENTED_NOTIFICATION, Boolean.toString(settings.isSlackNotificationsCommentedEnabled()))
                 .put(KEY_SLACK_NOTIFICATION_PUSH, Boolean.toString(settings.isSlackNotificationsEnabledForPush()))
-                .put(KEY_SLACK_PUSH_NOTIFICATION_LEVEL, settings.getPushNotificationLevel().toString())
+                .put(KEY_SLACK_NOTIFICATION_LEVEL, settings.getNotificationLevel().toString())
+                .put(KEY_SLACK_NOTIFICATION_PR_LEVEL, settings.getNotificationPrLevel().toString())
                 .put(KEY_SLACK_CHANNEL_NAME, settings.getSlackChannelName().isEmpty() ? " " : settings.getSlackChannelName())
                 .put(KEY_SLACK_WEBHOOK_URL, settings.getSlackWebHookUrl().isEmpty() ? " " : settings.getSlackWebHookUrl())
                 .build();
@@ -114,9 +120,10 @@ public class DefaultSlackSettingsService implements SlackSettingsService {
     }
 
     // note: for unknown reason, pluginSettngs.get() is not getting back the key for an empty string value
-    // probably I don't know someyhing here. Applying a hack
+    // probably I don't know something here. Applying a hack
     private SlackSettings deserialize(Map<String, String> settings) {
         return new ImmutableSlackSettings(
+                Boolean.parseBoolean(settings.get(KEY_SLACK_OVERRIDE_NOTIFICATION)),
                 Boolean.parseBoolean(settings.get(KEY_SLACK_NOTIFICATION)),
                 Boolean.parseBoolean(settings.get(KEY_SLACK_OPENED_NOTIFICATION)),
                 Boolean.parseBoolean(settings.get(KEY_SLACK_REOPENED_NOTIFICATION)),
@@ -127,7 +134,8 @@ public class DefaultSlackSettingsService implements SlackSettingsService {
                 Boolean.parseBoolean(settings.get(KEY_SLACK_MERGED_NOTIFICATION)),
                 Boolean.parseBoolean(settings.get(KEY_SLACK_COMMENTED_NOTIFICATION)),
                 Boolean.parseBoolean(settings.get(KEY_SLACK_NOTIFICATION_PUSH)),
-                settings.containsKey(KEY_SLACK_PUSH_NOTIFICATION_LEVEL) ? PushNotificationLevel.valueOf(settings.get(KEY_SLACK_PUSH_NOTIFICATION_LEVEL)) : PushNotificationLevel.VERBOSE,
+                settings.containsKey(KEY_SLACK_NOTIFICATION_LEVEL) ? NotificationLevel.valueOf(settings.get(KEY_SLACK_NOTIFICATION_LEVEL)) : NotificationLevel.VERBOSE,
+                settings.containsKey(KEY_SLACK_NOTIFICATION_PR_LEVEL) ? NotificationLevel.valueOf(settings.get(KEY_SLACK_NOTIFICATION_PR_LEVEL)) : NotificationLevel.VERBOSE,
                 settings.get(KEY_SLACK_CHANNEL_NAME).toString().equals(" ") ? "" : settings.get(KEY_SLACK_CHANNEL_NAME).toString(),
                 settings.get(KEY_SLACK_WEBHOOK_URL).toString().equals(" ") ? "" : settings.get(KEY_SLACK_WEBHOOK_URL).toString()
         );

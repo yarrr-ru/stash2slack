@@ -2,14 +2,14 @@ package com.pragbits.stash;
 
 import com.pragbits.stash.soy.SelectFieldOption;
 
-public enum PushNotificationLevel implements SelectFieldOption {
+public enum NotificationLevel implements SelectFieldOption {
     MINIMAL("Minimal"),
     COMPACT("Compact"),
     VERBOSE("Verbose");
 
     private final String text;
 
-    PushNotificationLevel(String text) {
+    NotificationLevel(String text) {
         this.text = text;
     }
 

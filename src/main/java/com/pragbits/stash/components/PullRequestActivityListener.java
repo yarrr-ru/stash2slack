@@ -10,10 +10,7 @@ import com.atlassian.stash.repository.Repository;
 import com.atlassian.stash.avatar.AvatarService;
 import com.atlassian.stash.avatar.AvatarRequest;
 import com.google.gson.Gson;
-import com.pragbits.stash.ColorCode;
-import com.pragbits.stash.SlackGlobalSettingsService;
-import com.pragbits.stash.SlackSettings;
-import com.pragbits.stash.SlackSettingsService;
+import com.pragbits.stash.*;
 import com.pragbits.stash.tools.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,9 +50,13 @@ public class PullRequestActivityListener {
         SlackSettings slackSettings = slackSettingsService.getSlackSettings(repository);
         String globalHookUrl = slackGlobalSettingsService.getWebHookUrl(KEY_GLOBAL_SETTING_HOOK_URL);
 
-        if (slackSettings.isSlackNotificationsEnabled()) {
 
-            String localHookUrl = slackSettings.getSlackWebHookUrl();
+        SettingsSelector settingsSelector = new SettingsSelector(slackSettingsService,  slackGlobalSettingsService, repository);
+        SlackSettings resolvedSlackSettings = settingsSelector.getResolvedSlackSettings();
+
+        if (resolvedSlackSettings.isSlackNotificationsEnabled()) {
+
+            String localHookUrl = resolvedSlackSettings.getSlackWebHookUrl();
             WebHookSelector hookSelector = new WebHookSelector(globalHookUrl, localHookUrl);
 
             if (!hookSelector.isHookValid()) {
@@ -70,40 +71,42 @@ public class PullRequestActivityListener {
             String activity = event.getActivity().getAction().name();
             String avatar = event.getUser() != null ? avatarService.getUrlForPerson(event.getUser(), avatarRequest) : "";
 
+            NotificationLevel resolvedLevel = resolvedSlackSettings.getNotificationPrLevel();
+
             // Ignore RESCOPED PR events
             if (activity.equalsIgnoreCase("RESCOPED") && event instanceof PullRequestRescopeActivityEvent) {
                 return;
             }
 
-            if (activity.equalsIgnoreCase("OPENED") && !slackSettings.isSlackNotificationsOpenedEnabled()) {
+            if (activity.equalsIgnoreCase("OPENED") && !resolvedSlackSettings.isSlackNotificationsOpenedEnabled()) {
                 return;
             }
 
-            if (activity.equalsIgnoreCase("REOPENED") && !slackSettings.isSlackNotificationsReopenedEnabled()) {
+            if (activity.equalsIgnoreCase("REOPENED") && !resolvedSlackSettings.isSlackNotificationsReopenedEnabled()) {
                 return;
             }
 
-            if (activity.equalsIgnoreCase("UPDATED") && !slackSettings.isSlackNotificationsUpdatedEnabled()) {
+            if (activity.equalsIgnoreCase("UPDATED") && !resolvedSlackSettings.isSlackNotificationsUpdatedEnabled()) {
                 return;
             }
 
-            if (activity.equalsIgnoreCase("APPROVED") && !slackSettings.isSlackNotificationsApprovedEnabled()) {
+            if (activity.equalsIgnoreCase("APPROVED") && !resolvedSlackSettings.isSlackNotificationsApprovedEnabled()) {
                 return;
             }
 
-            if (activity.equalsIgnoreCase("UNAPPROVED") && !slackSettings.isSlackNotificationsUnapprovedEnabled()) {
+            if (activity.equalsIgnoreCase("UNAPPROVED") && !resolvedSlackSettings.isSlackNotificationsUnapprovedEnabled()) {
                 return;
             }
 
-            if (activity.equalsIgnoreCase("DECLINED") && !slackSettings.isSlackNotificationsDeclinedEnabled()) {
+            if (activity.equalsIgnoreCase("DECLINED") && !resolvedSlackSettings.isSlackNotificationsDeclinedEnabled()) {
                 return;
             }
 
-            if (activity.equalsIgnoreCase("MERGED") && !slackSettings.isSlackNotificationsMergedEnabled()) {
+            if (activity.equalsIgnoreCase("MERGED") && !resolvedSlackSettings.isSlackNotificationsMergedEnabled()) {
                 return;
             }
 
-            if (activity.equalsIgnoreCase("COMMENTED") && !slackSettings.isSlackNotificationsCommentedEnabled()) {
+            if (activity.equalsIgnoreCase("COMMENTED") && !resolvedSlackSettings.isSlackNotificationsCommentedEnabled()) {
                 return;
             }
             
@@ -138,8 +141,14 @@ public class PullRequestActivityListener {
                                                             event.getPullRequest().getId(),
                                                             event.getPullRequest().getTitle()));
 
-                    this.addField(attachment, "Description", event.getPullRequest().getDescription());
-                    this.addReviewers(attachment, event.getPullRequest().getReviewers());
+
+                    if (resolvedLevel == NotificationLevel.COMPACT) {
+                        this.addField(attachment, "Description", event.getPullRequest().getDescription());
+                    }
+
+                    if (resolvedLevel == NotificationLevel.VERBOSE) {
+                        this.addReviewers(attachment, event.getPullRequest().getReviewers());
+                    }
                     break;
 
                 case REOPENED:
@@ -153,8 +162,12 @@ public class PullRequestActivityListener {
                                                             event.getPullRequest().getId(),
                                                             event.getPullRequest().getTitle()));
 
-                    this.addField(attachment, "Description", event.getPullRequest().getDescription());
-                    this.addReviewers(attachment, event.getPullRequest().getReviewers());
+                    if (resolvedLevel == NotificationLevel.COMPACT) {
+                        this.addField(attachment, "Description", event.getPullRequest().getDescription());
+                    }
+                    if (resolvedLevel == NotificationLevel.VERBOSE) {
+                        this.addReviewers(attachment, event.getPullRequest().getReviewers());
+                    }
                     break;
 
                 case UPDATED:
@@ -168,8 +181,12 @@ public class PullRequestActivityListener {
                                                             event.getPullRequest().getId(),
                                                             event.getPullRequest().getTitle()));
 
-                    this.addField(attachment, "Description", event.getPullRequest().getDescription());
-                    this.addReviewers(attachment, event.getPullRequest().getReviewers());
+                    if (resolvedLevel == NotificationLevel.COMPACT) {
+                        this.addField(attachment, "Description", event.getPullRequest().getDescription());
+                    }
+                    if (resolvedLevel == NotificationLevel.VERBOSE) {
+                        this.addReviewers(attachment, event.getPullRequest().getReviewers());
+                    }
                     break;
 
                 case APPROVED:
@@ -238,31 +255,41 @@ public class PullRequestActivityListener {
                                                             userName,
                                                             event.getPullRequest().getTitle(),
                                                             url));
-                    attachment.setText(String.format("commented on pull request <%s|#%d: %s>\n%s",
-                                                            url,
-                                                            event.getPullRequest().getId(),
-                                                            event.getPullRequest().getTitle(),
-                                                            ((PullRequestCommentActivityEvent)event).getActivity().getComment().getText()));
+                    if (resolvedLevel == NotificationLevel.MINIMAL) {
+                        attachment.setText(String.format("commented on pull request <%s|#%d: %s>",
+                                url,
+                                event.getPullRequest().getId(),
+                                event.getPullRequest().getTitle()));
+                    }
+                    if (resolvedLevel == NotificationLevel.COMPACT || resolvedLevel == NotificationLevel.VERBOSE) {
+                        attachment.setText(String.format("commented on pull request <%s|#%d: %s>\n%s",
+                                url,
+                                event.getPullRequest().getId(),
+                                event.getPullRequest().getTitle(),
+                                ((PullRequestCommentActivityEvent) event).getActivity().getComment().getText()));
+                    }
                     break;
             }
 
-            SlackAttachmentField projectField = new SlackAttachmentField();
-            projectField.setTitle("Source");
-            projectField.setValue(String.format("_%s — %s_\n`%s`",
-                event.getPullRequest().getFromRef().getRepository().getProject().getName(),
-                event.getPullRequest().getFromRef().getRepository().getName(),
-                event.getPullRequest().getFromRef().getDisplayId()));
-            projectField.setShort(true);
-            attachment.addField(projectField);
+            if (resolvedLevel == NotificationLevel.VERBOSE) {
+                SlackAttachmentField projectField = new SlackAttachmentField();
+                projectField.setTitle("Source");
+                projectField.setValue(String.format("_%s — %s_\n`%s`",
+                        event.getPullRequest().getFromRef().getRepository().getProject().getName(),
+                        event.getPullRequest().getFromRef().getRepository().getName(),
+                        event.getPullRequest().getFromRef().getDisplayId()));
+                projectField.setShort(true);
+                attachment.addField(projectField);
 
-            SlackAttachmentField repoField = new SlackAttachmentField();
-            repoField.setTitle("Destination");
-            repoField.setValue(String.format("_%s — %s_\n`%s`",
-                event.getPullRequest().getFromRef().getRepository().getProject().getName(),
-                event.getPullRequest().getToRef().getRepository().getName(),
-                event.getPullRequest().getToRef().getDisplayId()));
-            repoField.setShort(true);
-            attachment.addField(repoField);
+                SlackAttachmentField repoField = new SlackAttachmentField();
+                repoField.setTitle("Destination");
+                repoField.setValue(String.format("_%s — %s_\n`%s`",
+                        event.getPullRequest().getFromRef().getRepository().getProject().getName(),
+                        event.getPullRequest().getToRef().getRepository().getName(),
+                        event.getPullRequest().getToRef().getDisplayId()));
+                repoField.setShort(true);
+                attachment.addField(repoField);
+            }
 
             payload.addAttachment(attachment);
 
@@ -270,7 +297,7 @@ public class PullRequestActivityListener {
             // - empty
             // - comma separated list of channel names, eg: #mych1, #mych2, #mych3
 
-            if (slackSettings.getSlackChannelName().isEmpty()) {
+            if (resolvedSlackSettings.getSlackChannelName().isEmpty()) {
                 slackNotifier.SendSlackNotification(hookSelector.getSelectedHook(), gson.toJson(payload));
             } else {
                 // send message to multiple channels

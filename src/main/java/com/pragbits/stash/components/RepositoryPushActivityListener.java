@@ -56,7 +56,11 @@ public class RepositoryPushActivityListener {
         SlackSettings slackSettings = slackSettingsService.getSlackSettings(repository);
         String globalHookUrl = slackGlobalSettingsService.getWebHookUrl(KEY_GLOBAL_SETTING_HOOK_URL);
 
-        if (slackSettings.isSlackNotificationsEnabledForPush()) {
+        SettingsSelector settingsSelector = new SettingsSelector(slackSettingsService,  slackGlobalSettingsService, repository);
+        SlackSettings resolvedSlackSettings = settingsSelector.getResolvedSlackSettings();
+
+
+        if (resolvedSlackSettings.isSlackNotificationsEnabledForPush()) {
             String localHookUrl = slackSettings.getSlackWebHookUrl();
             WebHookSelector hookSelector = new WebHookSelector(globalHookUrl, localHookUrl);
 
@@ -113,7 +117,7 @@ public class RepositoryPushActivityListener {
                     myChanges.addAll(Lists.newArrayList(changeSets.getValues()));
                 }
 
-                switch (slackSettings.getPushNotificationLevel()) {
+                switch (resolvedSlackSettings.getNotificationLevel()) {
                     case COMPACT:
                         compactCommitLog(event, refChange, payload, url, myChanges);
                         break;
@@ -129,7 +133,7 @@ public class RepositoryPushActivityListener {
                 // - empty
                 // - comma separated list of channel names, eg: #mych1, #mych2, #mych3
 
-                if (slackSettings.getSlackChannelName().isEmpty()) {
+                if (resolvedSlackSettings.getSlackChannelName().isEmpty()) {
                     slackNotifier.SendSlackNotification(hookSelector.getSelectedHook(), gson.toJson(payload));
                 } else {
                     // send message to multiple channels

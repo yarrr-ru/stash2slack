@@ -2,6 +2,7 @@ package com.pragbits.stash;
 
 public interface SlackSettings {
 
+    boolean isSlackNotificationsOverrideEnabled();
     boolean isSlackNotificationsEnabled();
     boolean isSlackNotificationsOpenedEnabled();
     boolean isSlackNotificationsReopenedEnabled();
@@ -12,7 +13,8 @@ public interface SlackSettings {
     boolean isSlackNotificationsMergedEnabled();
     boolean isSlackNotificationsCommentedEnabled();
     boolean isSlackNotificationsEnabledForPush();
-    PushNotificationLevel getPushNotificationLevel();
+    NotificationLevel getNotificationLevel();
+    NotificationLevel getNotificationPrLevel();
     String getSlackChannelName();
     String getSlackWebHookUrl();
 

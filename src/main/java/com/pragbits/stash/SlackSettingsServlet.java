@@ -56,6 +56,11 @@ public class SlackSettingsServlet extends HttpServlet {
             return;
         }
 
+        boolean overrideEnabled = false;
+        if (null != req.getParameter("slackNotificationsOverrideEnabled") && req.getParameter("slackNotificationsOverrideEnabled").equals("on")) {
+            overrideEnabled = true;
+        }
+
         boolean enabled = false;
         if (null != req.getParameter("slackNotificationsEnabled") && req.getParameter("slackNotificationsEnabled").equals("on")) {
           enabled = true;
@@ -106,9 +111,14 @@ public class SlackSettingsServlet extends HttpServlet {
             enabledPush = true;
         }
 
-        PushNotificationLevel pushNotificationLevel = PushNotificationLevel.VERBOSE;
-        if (null != req.getParameter("slackPushNotificationLevel")) {
-            pushNotificationLevel = PushNotificationLevel.valueOf(req.getParameter("slackPushNotificationLevel"));
+        NotificationLevel notificationLevel = NotificationLevel.VERBOSE;
+        if (null != req.getParameter("slackNotificationLevel")) {
+            notificationLevel = NotificationLevel.valueOf(req.getParameter("slackNotificationLevel"));
+        }
+
+        NotificationLevel notificationPrLevel = NotificationLevel.VERBOSE;
+        if (null != req.getParameter("slackNotificationPrLevel")) {
+            notificationPrLevel = NotificationLevel.valueOf(req.getParameter("slackNotificationPrLevel"));
         }
 
         String channel = req.getParameter("slackChannelName");
@@ -116,6 +126,7 @@ public class SlackSettingsServlet extends HttpServlet {
         slackSettingsService.setSlackSettings(
                 repository,
                 new ImmutableSlackSettings(
+                        overrideEnabled,
                         enabled,
                         openedEnabled,
                         reopenedEnabled,
@@ -126,7 +137,8 @@ public class SlackSettingsServlet extends HttpServlet {
                         mergedEnabled,
                         commentedEnabled,
                         enabledPush,
-                        pushNotificationLevel,
+                        notificationLevel,
+                        notificationPrLevel,
                         channel,
                         webHookUrl));
 
@@ -167,7 +179,7 @@ public class SlackSettingsServlet extends HttpServlet {
                 ImmutableMap.<String, Object>builder()
                         .put("repository", repository)
                         .put("slackSettings", slackSettings)
-                        .put("pushNotificationLevels", new SelectFieldOptions(PushNotificationLevel.values()).toSoyStructure())
+                        .put("notificationLevels", new SelectFieldOptions(NotificationLevel.values()).toSoyStructure())
                         .build()
         );
     }

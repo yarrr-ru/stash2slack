@@ -2,6 +2,7 @@ package com.pragbits.stash;
 
 public class ImmutableSlackSettings implements SlackSettings {
 
+    private final boolean slackNotificationsOverrideEnabled;
     private final boolean slackNotificationsEnabled;
     private final boolean slackNotificationsOpenedEnabled;
     private final boolean slackNotificationsReopenedEnabled;
@@ -12,11 +13,13 @@ public class ImmutableSlackSettings implements SlackSettings {
     private final boolean slackNotificationsMergedEnabled;
     private final boolean slackNotificationsCommentedEnabled;
     private final boolean slackNotificationsEnabledForPush;
-    private final PushNotificationLevel pushNotificationLevel;
+    private final NotificationLevel notificationLevel;
+    private final NotificationLevel notificationPrLevel;
     private final String slackChannelName;
     private final String slackWebHookUrl;
 
-    public ImmutableSlackSettings(boolean slackNotificationsEnabled,
+    public ImmutableSlackSettings(boolean slackNotificationsOverrideEnabled,
+                                  boolean slackNotificationsEnabled,
                                   boolean slackNotificationsOpenedEnabled,
                                   boolean slackNotificationsReopenedEnabled,
                                   boolean slackNotificationsUpdatedEnabled,
@@ -26,9 +29,11 @@ public class ImmutableSlackSettings implements SlackSettings {
                                   boolean slackNotificationsMergedEnabled,
                                   boolean slackNotificationsCommentedEnabled,
                                   boolean slackNotificationsEnabledForPush,
-                                  PushNotificationLevel pushNotificationLevel,
+                                  NotificationLevel notificationLevel,
+                                  NotificationLevel notificationPrLevel,
                                   String slackChannelName,
                                   String slackWebHookUrl) {
+        this.slackNotificationsOverrideEnabled = slackNotificationsOverrideEnabled;
         this.slackNotificationsEnabled = slackNotificationsEnabled;
         this.slackNotificationsOpenedEnabled = slackNotificationsOpenedEnabled;
         this.slackNotificationsReopenedEnabled = slackNotificationsReopenedEnabled;
@@ -39,9 +44,14 @@ public class ImmutableSlackSettings implements SlackSettings {
         this.slackNotificationsMergedEnabled = slackNotificationsMergedEnabled;
         this.slackNotificationsCommentedEnabled = slackNotificationsCommentedEnabled;
         this.slackNotificationsEnabledForPush = slackNotificationsEnabledForPush;
-        this.pushNotificationLevel = pushNotificationLevel;
+        this.notificationLevel = notificationLevel;
+        this.notificationPrLevel = notificationPrLevel;
         this.slackChannelName = slackChannelName;
         this.slackWebHookUrl = slackWebHookUrl;
+    }
+
+    public boolean isSlackNotificationsOverrideEnabled() {
+        return slackNotificationsOverrideEnabled;
     }
 
     public boolean isSlackNotificationsEnabled() {
@@ -84,8 +94,12 @@ public class ImmutableSlackSettings implements SlackSettings {
         return slackNotificationsEnabledForPush;
     }
 
-    public PushNotificationLevel getPushNotificationLevel() {
-        return pushNotificationLevel;
+    public NotificationLevel getNotificationLevel() {
+        return notificationLevel;
+    }
+
+    public NotificationLevel getNotificationPrLevel() {
+        return notificationPrLevel;
     }
 
     public String getSlackChannelName() {
@@ -98,7 +112,8 @@ public class ImmutableSlackSettings implements SlackSettings {
 
     @Override
     public String toString() {
-        return "ImmutableSlackSettings {" + "slackNotificationsEnabled=" + slackNotificationsEnabled +
+        return "ImmutableSlackSettings {" + "slackNotificationsOverrideEnabled=" + slackNotificationsOverrideEnabled +
+                ", slackNotificationsEnabled=" + slackNotificationsEnabled +
                 ", slackNotificationsOpenedEnabled=" + slackNotificationsOpenedEnabled +
                 ", slackNotificationsReopenedEnabled=" + slackNotificationsReopenedEnabled +
                 ", slackNotificationsUpdatedEnabled=" + slackNotificationsUpdatedEnabled +
@@ -108,7 +123,8 @@ public class ImmutableSlackSettings implements SlackSettings {
                 ", slackNotificationsMergedEnabled=" + slackNotificationsMergedEnabled +
                 ", slackNotificationsCommentedEnabled=" + slackNotificationsCommentedEnabled +
                 ", slackNotificationsEnabledForPush=" + slackNotificationsEnabledForPush +
-                ", pushNotificationLevel=" + pushNotificationLevel +
+                ", notificationLevel=" + notificationLevel +
+                ", notificationPrLevel=" + notificationPrLevel +
                 ", slackChannelName=" + slackChannelName +
                 ", slackWebHookUrl=" + slackWebHookUrl + "}";
     }

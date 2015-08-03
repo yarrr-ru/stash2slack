@@ -3,7 +3,7 @@
 /**
  * @param repository
  * @param slackSettings
- * @param pushNotificationLevels
+ * @param notificationLevels
  **/
 {template .viewSlackSettings}
 <html>
@@ -23,13 +23,30 @@
         {call widget.aui.form.form}
             {param action: '' /}
             {param content}
+
+                {call widget.aui.form.checkbox}
+                    {param id: 'slackNotificationsOverrideEnabled' /}
+                    {param labelContent: stash_i18n('stash.web.slack.settings.slack.enabled.label', 'Override settings for global slack notification options') /}
+                    {param checked: $slackSettings.slackNotificationsOverrideEnabled /}
+                    {param description: stash_i18n('stash.web.slack.settings.slack.override.description', 'If enabled, slack notifications will use the settings defined here instead of global settings. NOTE: You do not need to enable this checkbox if you want to change only the channel name or the hook (old behavior). This flag is overriding pr filters and/or push notification options. Note however, if you enable the flag, you HAVE to set a channel name as well (only the hook is not required).') /}
+                {/call}
+
                 <h4>Pull request notifications</h4>
+
                 {call widget.aui.form.checkbox}
                     {param id: 'slackNotificationsEnabled' /}
                     {param labelContent: stash_i18n('stash.web.slack.settings.slack.enabled.label', 'Enable slack notifications for pull requests') /}
                     {param checked: $slackSettings.slackNotificationsEnabled /}
                     {param description: stash_i18n('stash.web.slack.settings.slack.enabled.description', 'If enabled, users will receive slack notifications about pull request activities') /}
                 {/call}
+
+                {call aui.form.selectField}
+                    {param id: 'slackNotificationPrLevel' /}
+                    {param labelContent: stash_i18n('stash.web.slack.settings.notification.pr.level.label', 'Pull request notification level') /}
+                    {param value: $slackSettings.notificationPrLevel /}
+                    {param options: $notificationLevels /}
+                {/call}
+
 
                 <div style="padding-left: 20px;">
                     <p>Filter pull request events based on activity types</p>
@@ -92,10 +109,10 @@
                     {param description: stash_i18n('stash.web.slack.settings.slack.push.enabled.description', 'If enabled, users will receive slack notifications about push activities') /}
                 {/call}
                 {call aui.form.selectField}
-                    {param id: 'slackPushNotificationLevel' /}
-                    {param labelContent: stash_i18n('stash.web.slack.settings.push.notification.level.label', 'Notification level') /}
-                    {param value: $slackSettings.pushNotificationLevel /}
-                    {param options: $pushNotificationLevels /}
+                    {param id: 'slackNotificationLevel' /}
+                    {param labelContent: stash_i18n('stash.web.slack.settings.notification.level.label', 'Push notification level') /}
+                    {param value: $slackSettings.notificationLevel /}
+                    {param options: $notificationLevels /}
                 {/call}
 
                 <h4>Channel and hook overrides</h4>
