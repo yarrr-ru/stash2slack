@@ -13,6 +13,7 @@ public class ImmutableSlackSettings implements SlackSettings {
     private final boolean slackNotificationsMergedEnabled;
     private final boolean slackNotificationsCommentedEnabled;
     private final boolean slackNotificationsEnabledForPush;
+    private final boolean slackNotificationsEnabledForPersonal;
     private final NotificationLevel notificationLevel;
     private final NotificationLevel notificationPrLevel;
     private final String slackChannelName;
@@ -29,6 +30,7 @@ public class ImmutableSlackSettings implements SlackSettings {
                                   boolean slackNotificationsMergedEnabled,
                                   boolean slackNotificationsCommentedEnabled,
                                   boolean slackNotificationsEnabledForPush,
+                                  boolean slackNotificationsEnabledForPersonal,
                                   NotificationLevel notificationLevel,
                                   NotificationLevel notificationPrLevel,
                                   String slackChannelName,
@@ -44,6 +46,7 @@ public class ImmutableSlackSettings implements SlackSettings {
         this.slackNotificationsMergedEnabled = slackNotificationsMergedEnabled;
         this.slackNotificationsCommentedEnabled = slackNotificationsCommentedEnabled;
         this.slackNotificationsEnabledForPush = slackNotificationsEnabledForPush;
+        this.slackNotificationsEnabledForPersonal = slackNotificationsEnabledForPersonal;
         this.notificationLevel = notificationLevel;
         this.notificationPrLevel = notificationPrLevel;
         this.slackChannelName = slackChannelName;
@@ -94,6 +97,8 @@ public class ImmutableSlackSettings implements SlackSettings {
         return slackNotificationsEnabledForPush;
     }
 
+    public boolean isSlackNotificationsEnabledForPersonal() { return slackNotificationsEnabledForPersonal; }
+
     public NotificationLevel getNotificationLevel() {
         return notificationLevel;
     }
@@ -123,6 +128,7 @@ public class ImmutableSlackSettings implements SlackSettings {
                 ", slackNotificationsMergedEnabled=" + slackNotificationsMergedEnabled +
                 ", slackNotificationsCommentedEnabled=" + slackNotificationsCommentedEnabled +
                 ", slackNotificationsEnabledForPush=" + slackNotificationsEnabledForPush +
+                ", slackNotificationsEnabledForPersonal=" + slackNotificationsEnabledForPersonal +
                 ", notificationLevel=" + notificationLevel +
                 ", notificationPrLevel=" + notificationPrLevel +
                 ", slackChannelName=" + slackChannelName +

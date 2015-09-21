@@ -13,6 +13,7 @@
  * @param slackNotificationsMergedEnabled
  * @param slackNotificationsCommentedEnabled
  * @param slackNotificationsEnabledForPush
+ * @param slackNotificationsEnabledForPersonal
  * @param notificationLevel
  * @param notificationPrLevel
  * @param notificationLevels
@@ -116,6 +117,16 @@
                     {param value: $notificationLevel /}
                     {param options: $notificationLevels /}
                 {/call}
+
+                <h4>Personal notifications enabled</h4>
+
+                {call widget.aui.form.checkbox}
+                    {param id: 'slackNotificationsEnabledForPersonal' /}
+                    {param labelContent: stash_i18n('stash.web.slack.settings.global.slack.personal.enabled.label', 'Enable slack notifications for personal') /}
+                    {param checked: $slackNotificationsEnabledForPersonal /}
+                    {param description: stash_i18n('stash.web.slack.settings.global.slack.personal.enabled.description', 'If enabled, users will receive slack notifications for personal repos (forks) for both push and pullreqs') /}
+                {/call}
+
 
 
                 <h4>Channel and hook name</h4>

@@ -144,6 +144,16 @@ public class DefaultGlobalSlackSettingsService implements SlackGlobalSettingsSer
     }
 
     @Override
+    public boolean getSlackNotificationsEnabledForPersonal(String key) {
+        return Boolean.parseBoolean((String)pluginSettings.get(key));
+    }
+
+    @Override
+    public void setSlackNotificationsEnabledForPersonal(String key, String value) {
+        pluginSettings.put(key, value);
+    }
+
+    @Override
     public NotificationLevel getNotificationLevel(String key) {
         Object retval = pluginSettings.get(key);
         if (null == retval) {

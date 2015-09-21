@@ -60,7 +60,6 @@ public class RepositoryPushActivityListener {
         SettingsSelector settingsSelector = new SettingsSelector(slackSettingsService,  slackGlobalSettingsService, repository);
         SlackSettings resolvedSlackSettings = settingsSelector.getResolvedSlackSettings();
 
-
         if (resolvedSlackSettings.isSlackNotificationsEnabledForPush()) {
             String localHookUrl = slackSettings.getSlackWebHookUrl();
             WebHookSelector hookSelector = new WebHookSelector(globalHookUrl, localHookUrl);
@@ -68,6 +67,11 @@ public class RepositoryPushActivityListener {
 
             if (!hookSelector.isHookValid()) {
                 log.error("There is no valid configured Web hook url! Reason: " + hookSelector.getProblem());
+                return;
+            }
+
+            if (repository.isFork() && !resolvedSlackSettings.isSlackNotificationsEnabledForPersonal()) {
+                // simply return silently when we don't want forks to get notifications unless they're explicitly enabled
                 return;
             }
 

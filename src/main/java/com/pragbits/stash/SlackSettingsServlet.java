@@ -111,6 +111,11 @@ public class SlackSettingsServlet extends HttpServlet {
             enabledPush = true;
         }
 
+        boolean enabledPersonal = false;
+        if (null != req.getParameter("slackNotificationsEnabledForPersonal") && req.getParameter("slackNotificationsEnabledForPersonal").equals("on")) {
+            enabledPersonal = true;
+        }
+
         NotificationLevel notificationLevel = NotificationLevel.VERBOSE;
         if (null != req.getParameter("slackNotificationLevel")) {
             notificationLevel = NotificationLevel.valueOf(req.getParameter("slackNotificationLevel"));
@@ -137,6 +142,7 @@ public class SlackSettingsServlet extends HttpServlet {
                         mergedEnabled,
                         commentedEnabled,
                         enabledPush,
+                        enabledPersonal,
                         notificationLevel,
                         notificationPrLevel,
                         channel,
