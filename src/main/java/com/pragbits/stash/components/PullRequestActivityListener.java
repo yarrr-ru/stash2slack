@@ -66,6 +66,11 @@ public class PullRequestActivityListener {
                 return;
             }
 
+            if (repository.isFork() && !resolvedSlackSettings.isSlackNotificationsEnabledForPersonal()) {
+                // simply return silently when we don't want forks to get notifications unless they're explicitly enabled
+                return;
+            }
+
             String repoName = repository.getSlug();
             String projectName = repository.getProject().getKey();
             long pullRequestId = event.getPullRequest().getId();

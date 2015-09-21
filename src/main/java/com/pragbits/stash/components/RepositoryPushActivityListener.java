@@ -60,7 +60,6 @@ public class RepositoryPushActivityListener {
         SettingsSelector settingsSelector = new SettingsSelector(slackSettingsService,  slackGlobalSettingsService, repository);
         SlackSettings resolvedSlackSettings = settingsSelector.getResolvedSlackSettings();
 
-
         if (resolvedSlackSettings.isSlackNotificationsEnabledForPush()) {
             String localHookUrl = slackSettings.getSlackWebHookUrl();
             WebHookSelector hookSelector = new WebHookSelector(globalHookUrl, localHookUrl);
@@ -71,42 +70,65 @@ public class RepositoryPushActivityListener {
                 return;
             }
 
+            if (repository.isFork() && !resolvedSlackSettings.isSlackNotificationsEnabledForPersonal()) {
+                // simply return silently when we don't want forks to get notifications unless they're explicitly enabled
+                return;
+            }
+
             String repoName = repository.getSlug();
             String projectName = repository.getProject().getKey();
 
-            for (RefChange refChange : event.getRefChanges()) {
-                SlackPayload payload = new SlackPayload();
+            String repoPath = projectName + "/" + event.getRepository().getName();
 
-                String url = navBuilder
+            for (RefChange refChange : event.getRefChanges()) {
+                String text;
+                String ref = refChange.getRefId();
+                NavBuilder.Repo repoUrlBuilder = navBuilder
                         .project(projectName)
-                        .repo(repoName)
+                        .repo(repoName);
+                String url = repoUrlBuilder
                         .commits()
+                        .until(refChange.getRefId())
                         .buildAbsolute();
 
-                String text = String.format("Push on `%s` by `%s <%s>`. See <%s|commit list>.",
-                        event.getRepository().getName(),
-                        event.getUser() != null ? event.getUser().getDisplayName() : "unknown user",
-                        event.getUser() != null ? event.getUser().getEmailAddress() : "unknown email",
-                        url);
-
-                if (refChange.getToHash().equalsIgnoreCase("0000000000000000000000000000000000000000") && refChange.getType() == RefChangeType.DELETE) {
-                    // issue#4: if type is "DELETE" and toHash is all zero then this is a branch delete
-                    text = String.format("Branch `%s` deleted from repository `%s` by `%s <%s>`.",
-                            refChange.getRefId(),
-                            event.getRepository().getName(),
-                            event.getUser() != null ? event.getUser().getDisplayName() : "unknown user",
-                            event.getUser() != null ? event.getUser().getEmailAddress() : "unknown email");
-                }
-
-                payload.setText(text);
-                payload.setMrkdwn(true);
-
                 List<Changeset> myChanges = new LinkedList<Changeset>();
-                if (refChange.getFromHash().equalsIgnoreCase("0000000000000000000000000000000000000000")) {
+                boolean isNewRef = refChange.getFromHash().equalsIgnoreCase("0000000000000000000000000000000000000000");
+                boolean isDeleted = refChange.getToHash().equalsIgnoreCase("0000000000000000000000000000000000000000")
+                    && refChange.getType() == RefChangeType.DELETE;
+                if (isDeleted) {
+                    // issue#4: if type is "DELETE" and toHash is all zero then this is a branch delete
+                    if (ref.indexOf("refs/tags") >= 0) {
+                        text = String.format("Tag `%s` deleted from repository <%s|`%s`>.",
+                                ref.replace("refs/tags/", ""),
+                                repoUrlBuilder.buildAbsolute(),
+                                repoPath);
+                    } else {
+                        text = String.format("Branch `%s` deleted from repository <%s|`%s`>.",
+                                ref.replace("refs/heads/", ""),
+                                repoUrlBuilder.buildAbsolute(),
+                                repoPath);
+                    }
+                } else if (isNewRef) {
                     // issue#3 if fromHash is all zero (meaning the beginning of everything, probably), then this push is probably
-                    // a new branch, and we want only to display the latest commit, not the entire history
+                    // a new branch or tag, and we want only to display the latest commit, not the entire history
                     Changeset latestChangeSet = commitService.getChangeset(repository, refChange.getToHash());
                     myChanges.add(latestChangeSet);
+                    if (ref.indexOf("refs/tags") >= 0) {
+                        text = String.format("Tag <%s|`%s`> pushed on <%s|`%s`>. See <%s|commit list>.",
+                                url,
+                                ref.replace("refs/tags/", ""),
+                                repoUrlBuilder.buildAbsolute(),
+                                repoPath,
+                                url
+                                );
+                    } else {
+                        text = String.format("Branch <%s|`%s`> pushed on <%s|`%s`>. See <%s|commit list>.",
+                                url,
+                                ref.replace("refs/heads/", ""),
+                                repoUrlBuilder.buildAbsolute(),
+                                repoPath,
+                                url);
+                    }
                 } else {
                     ChangesetsBetweenRequest request = new ChangesetsBetweenRequest.Builder(repository)
                             .exclude(refChange.getFromHash())
@@ -117,14 +139,36 @@ public class RepositoryPushActivityListener {
                             request, PageUtils.newRequest(0, PageRequest.MAX_PAGE_LIMIT));
 
                     myChanges.addAll(Lists.newArrayList(changeSets.getValues()));
+
+                    int commitCount = myChanges.size();
+                    String commitStr = commitCount == 1 ? "commit" : "commits";
+
+                    String branch = ref.replace("refs/heads/", "");
+                    text = String.format("Push on <%s|`%s`> branch <%s|`%s`> by `%s <%s>` (%d %s). See <%s|commit list>.",
+                            repoUrlBuilder.buildAbsolute(),
+                            repoPath,
+                            url,
+                            branch,
+                            event.getUser() != null ? event.getUser().getDisplayName() : "unknown user",
+                            event.getUser() != null ? event.getUser().getEmailAddress() : "unknown email",
+                            commitCount, commitStr,
+                            url);
                 }
+
+                // Figure out what type of change this is:
+
+
+                SlackPayload payload = new SlackPayload();
+
+                payload.setText(text);
+                payload.setMrkdwn(true);
 
                 switch (resolvedSlackSettings.getNotificationLevel()) {
                     case COMPACT:
-                        compactCommitLog(event, refChange, payload, url, myChanges);
+                        compactCommitLog(event, refChange, payload, repoUrlBuilder, myChanges);
                         break;
                     case VERBOSE:
-                        verboseCommitLog(event, refChange, payload, url, text, myChanges);
+                        verboseCommitLog(event, refChange, payload, repoUrlBuilder, text, myChanges);
                         break;
                     case MINIMAL:
                     default:
@@ -149,37 +193,42 @@ public class RepositoryPushActivityListener {
         }
     }
 
-    private void compactCommitLog(RepositoryPushEvent event, RefChange refChange, SlackPayload payload, String url, List<Changeset> myChanges) {
+    private void compactCommitLog(RepositoryPushEvent event, RefChange refChange, SlackPayload payload, NavBuilder.Repo urlBuilder, List<Changeset> myChanges) {
+        if (myChanges.size() == 0) {
+            // If there are no commits, no reason to add anything
+        }
         SlackAttachment commits = new SlackAttachment();
         commits.setColor(ColorCode.GRAY.getCode());
-        commits.setTitle(String.format("[%s:%s]", event.getRepository().getName(), refChange.getRefId()));
+        // Since the branch is now in the main commit line, title is not needed
+        //commits.setTitle(String.format("[%s:%s]", event.getRepository().getName(), refChange.getRefId().replace("refs/heads", "")));
         StringBuilder attachmentFallback = new StringBuilder();
+        StringBuilder commitListBlock = new StringBuilder();
         for (Changeset ch : myChanges) {
-            String commitUrl = url.concat(String.format("/%s", ch.getId()));
+            String commitUrl = urlBuilder.changeset(ch.getId()).buildAbsolute();
             String firstCommitMessageLine = ch.getMessage().split("\n")[0];
 
-            SlackAttachmentField commit = new SlackAttachmentField();
-            commit.setValue(String.format("<%s|%s>: %s - %s",
+            // Note that we changed this to put everything in one attachment because otherwise it
+            // doesn't get collapsed in slack (the see more... doesn't appear)
+            commitListBlock.append(String.format("<%s|`%s`>: %s - _%s_\n",
                     commitUrl, ch.getDisplayId(), firstCommitMessageLine, ch.getAuthor().getName()));
-            commit.setShort(false);
 
-            commits.addField(commit);
             attachmentFallback.append(String.format("%s: %s\n", ch.getDisplayId(), firstCommitMessageLine));
         }
+        commits.setText(commitListBlock.toString());
         commits.setFallback(attachmentFallback.toString());
 
         payload.addAttachment(commits);
     }
 
-    private void verboseCommitLog(RepositoryPushEvent event, RefChange refChange, SlackPayload payload, String url, String text, List<Changeset> myChanges) {
+    private void verboseCommitLog(RepositoryPushEvent event, RefChange refChange, SlackPayload payload, NavBuilder.Repo urlBuilder, String text, List<Changeset> myChanges) {
         for (Changeset ch : myChanges) {
             SlackAttachment attachment = new SlackAttachment();
             attachment.setFallback(text);
             attachment.setColor(ColorCode.GRAY.getCode());
             SlackAttachmentField field = new SlackAttachmentField();
 
-            attachment.setTitle(String.format("[%s:%s] - %s", event.getRepository().getName(), refChange.getRefId(), ch.getId()));
-            attachment.setTitle_link(url.concat(String.format("/%s", ch.getId())));
+            attachment.setTitle(String.format("[%s:%s] - %s", event.getRepository().getName(), refChange.getRefId().replace("refs/heads", ""), ch.getId()));
+            attachment.setTitle_link(urlBuilder.changeset(ch.getId()).buildAbsolute());
 
             field.setTitle("comment");
             field.setValue(ch.getMessage());
