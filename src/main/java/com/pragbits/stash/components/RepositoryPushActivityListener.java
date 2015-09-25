@@ -144,6 +144,11 @@ public class RepositoryPushActivityListener {
                     String commitStr = commitCount == 1 ? "commit" : "commits";
 
                     String branch = ref.replace("refs/heads/", "");
+
+                    if (!branch.equals("master")) {
+                        continue;
+                    }
+
                     text = String.format("Push on <%s|`%s`> branch <%s|`%s`> by `%s <%s>` (%d %s). See <%s|commit list>.",
                             repoUrlBuilder.buildAbsolute(),
                             repoPath,
