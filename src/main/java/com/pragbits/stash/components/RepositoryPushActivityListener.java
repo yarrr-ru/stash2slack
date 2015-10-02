@@ -95,6 +95,9 @@ public class RepositoryPushActivityListener {
                 boolean isNewRef = refChange.getFromHash().equalsIgnoreCase("0000000000000000000000000000000000000000");
                 boolean isDeleted = refChange.getToHash().equalsIgnoreCase("0000000000000000000000000000000000000000")
                     && refChange.getType() == RefChangeType.DELETE;
+                if (isDeleted || isNewRef) {
+                    return;
+                }
                 if (isDeleted) {
                     // issue#4: if type is "DELETE" and toHash is all zero then this is a branch delete
                     if (ref.indexOf("refs/tags") >= 0) {
